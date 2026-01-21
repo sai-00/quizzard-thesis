@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../repositories/user_repository.dart';
 import '../../repositories/question_repository.dart';
 import '../../repositories/progress_repository.dart';
@@ -15,25 +18,50 @@ class AddProfileForm extends StatefulWidget {
 class _AddProfileFormState extends State<AddProfileForm> {
   final _form = GlobalKey<FormState>();
   String _name = '';
+  String? _avatarPath;
   bool _saving = false;
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Add Profile'),
-      content: Form(
-        key: _form,
-        child: TextFormField(
-          decoration: const InputDecoration(labelText: 'Name'),
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'Enter a name' : null,
-          onSaved: (v) => _name = v!.trim(),
+      content: SingleChildScrollView(
+        child: Form(
+          key: _form,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Name'),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Enter a name' : null,
+                onSaved: (v) => _name = v!.trim(),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _pickProfilePicture,
+                  child: const Text('Pick profile picture'),
+                ),
+              ),
+              if (_avatarPath != null && _avatarPath!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _avatarPath!.split(Platform.pathSeparator).last,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+      actionsPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      insetPadding: const EdgeInsets.all(24),
       actions: [
         TextButton(
-          onPressed: () =>
-              Navigator.of(context).pop(false), // ❗return false when canceled
+          onPressed: () => Navigator.of(context).pop(false),
           child: const Text('Cancel'),
         ),
         ElevatedButton(
@@ -57,7 +85,9 @@ class _AddProfileFormState extends State<AddProfileForm> {
     bool creationFailed = false;
 
     try {
-      final newId = await userRepo.add(User(name: _name));
+      final newId = await userRepo.add(
+        User(name: _name, avatar: _avatarPath ?? ''),
+      );
       final subjects = await questionRepo.getSubjects();
 
       for (final subj in subjects) {
@@ -91,6 +121,19 @@ class _AddProfileFormState extends State<AddProfileForm> {
     if (!mounted) return;
 
     _handleResult(creationFailed);
+  }
+
+  Future<void> _pickProfilePicture() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+    if (result != null && result.files.isNotEmpty) {
+      final path = result.files.single.path;
+      if (path != null) {
+        setState(() => _avatarPath = path);
+      }
+    }
   }
 
   void _handleResult(bool creationFailed) {

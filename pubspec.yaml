@@ -40,6 +40,8 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  csv: ^6.0.0
+  file_picker: ^5.3.0
 
 dev_dependencies:
   flutter_test:
@@ -64,9 +66,54 @@ flutter:
   uses-material-design: true
 
   assets:
+    # database
     - assets/db/gamedb.sql
-    # if you later add a prebuilt binary DB include:
-    # - assets/db/gamedb.db
+ 
+    # art assets
+
+    # covers
+    - assets/art/covers/eng_cover.png
+    - assets/art/covers/math_cover.png
+    - assets/art/covers/sci_cover.png
+
+    # backgrounds
+    - assets/art/bgs/math/math-hall.png
+    - assets/art/bgs/math/math-boss.png
+
+    - assets/art/bgs/eng/eng-bg.png
+
+    - assets/art/bgs/sci/sci-easy.png
+    - assets/art/bgs/sci/sci-hard.png
+    - assets/art/bgs/sci/sci-medium.png
+
+    # sprites
+    - assets/art/sprites/math/math-correct-answer.png
+    - assets/art/sprites/math/math-wrong-answer.png
+    - assets/art/sprites/math/math-neutral-speaking.png
+    - assets/art/sprites/math/math-neutral.png
+
+    - assets/art/sprites/eng/eng-correct-answer.png
+    - assets/art/sprites/eng/eng-wrong-answer.png
+    - assets/art/sprites/eng/eng-neutral-speaking.png
+    - assets/art/sprites/eng/eng-neutral.png
+
+    - assets/art/sprites/sci/sci-correct-answer.png
+    - assets/art/sprites/sci/sci-wrong-answer.png 
+    - assets/art/sprites/sci/sci-neutral-speaking.png
+    - assets/art/sprites/sci/sci-neutral.png
+
+    # csv files
+    - lib/screens/game_loop/scenes/math/math_easy.csv
+    - lib/screens/game_loop/scenes/math/math_medium.csv
+    - lib/screens/game_loop/scenes/math/math_hard.csv
+
+    - lib/screens/game_loop/scenes/reading/reading_easy.csv
+    - lib/screens/game_loop/scenes/reading/reading_medium.csv
+    - lib/screens/game_loop/scenes/reading/reading_hard.csv
+
+    - lib/screens/game_loop/scenes/science/science_easy.csv
+    - lib/screens/game_loop/scenes/science/science_medium.csv
+    - lib/screens/game_loop/scenes/science/science_hard.csv
 
   # To add assets to your application, add an assets section, like this:
   # assets:

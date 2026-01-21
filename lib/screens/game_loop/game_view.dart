@@ -1,0 +1,706 @@
+// ignore_for_file: deprecated_member_use
+
+import 'package:flutter/material.dart';
+import '../../repositories/game_repository.dart';
+import '../../services/sprite_manager.dart';
+import 'game_controller.dart';
+import '../game_loop/feedback_messages.dart';
+import '../game_loop/scene_renderer.dart';
+import '../game_loop/game_menu.dart';
+
+class GameView extends StatefulWidget {
+  final int subjID;
+  final String subject;
+  final String difficulty;
+  final int level;
+  final bool isBossLevel;
+  final int profileID;
+
+  const GameView({
+    super.key,
+    required this.subjID,
+    required this.subject,
+    required this.difficulty,
+    required this.level,
+    required this.isBossLevel,
+    required this.profileID,
+  });
+
+  @override
+  State<GameView> createState() => _GameViewState();
+}
+
+class _GameViewState extends State<GameView> {
+  late GameController controller;
+  late SpriteManager spriteManager;
+  SpriteFrame? frame;
+  double spriteYOffset = 0.0;
+
+  final GlobalKey<SceneRendererState> _sceneKey = GlobalKey();
+  bool _csvBeginningFinished = false;
+  bool _showingCsvEnd = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    spriteManager = SpriteManager(
+      subject: SubjectType.values.byName(widget.subject.toLowerCase()),
+      difficulty: widget.difficulty,
+      level: widget.isBossLevel ? 99 : widget.level,
+    );
+
+    controller = GameController(
+      repository: GameRepository(),
+      subjID: widget.subjID,
+      difficulty: widget.difficulty,
+      level: widget.level,
+      isBossLevel: widget.isBossLevel,
+      profileID: widget.profileID,
+    );
+
+    controller.onUpdate = () {
+      if (!mounted) return;
+      // If we reached the completed phase, start by showing CSV end overlay
+      if (controller.phase == GamePhase.completed) {
+        _showingCsvEnd = true;
+      }
+
+      setState(() {});
+      _updateSpriteForState();
+    };
+
+    frame = spriteManager.initialFrame();
+    controller.init().then((_) {
+      // Only show neutral talking if not in cutscene
+      if (controller.phase == GamePhase.gameplay) {
+        spriteManager.showNeutralTalking(_updateSprite);
+      }
+    });
+  }
+
+  // new helper
+  void _csvRendererNext() {
+    _sceneKey.currentState?.nextLine();
+  }
+
+  bool _csvHasLines() => _sceneKey.currentState?.hasLines ?? false;
+
+  void _updateSprite(SpriteFrame? newFrame) {
+    setState(() {
+      frame = newFrame;
+      spriteYOffset = -20;
+    });
+
+    if (newFrame != null) {
+      Future.delayed(const Duration(milliseconds: 120), () {
+        if (!mounted) return;
+        setState(() => spriteYOffset = 0);
+      });
+    }
+  }
+
+  void _updateSpriteForState() {
+    if (controller.phase == GamePhase.cutsceneStart ||
+        controller.phase == GamePhase.cutsceneEnd) {
+      return;
+    }
+
+    if (controller.showingExplanation) {
+      _updateSprite(
+        controller.lastAnswerResult == AnswerResult.correct
+            ? spriteManager.correctAnswerFrame()
+            : spriteManager.wrongAnswerFrame(),
+      );
+    } else {
+      spriteManager.showNeutralTalking(_updateSprite);
+    }
+  }
+
+  void _playNextLevel() {
+    int nextLevel;
+    bool nextBoss = false;
+
+    if (widget.level < 5) {
+      nextLevel = widget.level + 1;
+    } else if (widget.level == 5) {
+      // unlock boss
+      nextLevel = 99;
+      nextBoss = true;
+    } else {
+      // after boss, return to levels screen
+      Navigator.of(context).pop();
+      return;
+    }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => GameView(
+          subjID: widget.subjID,
+          subject: widget.subject,
+          difficulty: widget.difficulty,
+          level: nextLevel,
+          isBossLevel: nextBoss,
+          profileID: widget.profileID,
+        ),
+      ),
+    );
+  }
+
+  void _retryLevel() {
+    controller.finishCutscene();
+    frame = null;
+    _csvBeginningFinished = false;
+    _showingCsvEnd = false;
+    controller.init().then((_) {
+      if (controller.phase == GamePhase.gameplay) {
+        spriteManager.showNeutralTalking(_updateSprite);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    spriteManager.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Stack(
+      children: [
+        _buildPhase(),
+        // Top-left menu button
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white),
+              onPressed: () {
+                showDialog(context: context, builder: (_) => const GameMenu());
+              },
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _csvCutscene(ScenePlacement placement) {
+    // Choose onFinished/onNoLines handlers depending on placement so we can
+    // sequence: CSV beginning -> view cutscene -> gameplay -> view end -> CSV end
+    if (placement == ScenePlacement.beginning) {
+      return SceneRenderer(
+        subject: SubjectType.values.byName(widget.subject.toLowerCase()),
+        difficulty: widget.difficulty,
+        level: widget.level,
+        placement: placement,
+        spriteManager: spriteManager,
+        onSpriteUpdate: _updateSprite,
+        onFinished: () {
+          setState(() => _csvBeginningFinished = true);
+        },
+        onNoLines: () {
+          // If there are no CSV lines at the beginning, mark as finished so
+          // the view cutscene shows immediately.
+          setState(() => _csvBeginningFinished = true);
+        },
+        onNext: _csvRendererNext,
+        textBoxColor: _subjectColor(widget.subject),
+        key: _sceneKey,
+      );
+    }
+
+    // end placement
+    return SceneRenderer(
+      subject: SubjectType.values.byName(widget.subject.toLowerCase()),
+      difficulty: widget.difficulty,
+      level: widget.level,
+      placement: placement,
+      spriteManager: spriteManager,
+      onSpriteUpdate: _updateSprite,
+      onFinished: () {
+        // Hide CSV overlay when the CSV end finishes so the levelComplete UI
+        // beneath becomes interactive (Next Level / Quit buttons).
+        setState(() => _showingCsvEnd = false);
+      },
+      onNext: _csvRendererNext,
+      onNoLines: () {
+        // If no CSV lines at end, just hide overlay immediately
+        setState(() => _showingCsvEnd = false);
+      },
+      textBoxColor: _subjectColor(widget.subject),
+      key: _sceneKey,
+    );
+  }
+
+  Widget _buildPhase() {
+    switch (controller.phase) {
+      case GamePhase.loading:
+        return const Center(child: CircularProgressIndicator());
+      case GamePhase.cutsceneStart:
+        return Stack(
+          children: [
+            // show the view cutscene underneath; CSV beginning overlays it
+            _cutscene(),
+            if (!_csvBeginningFinished) _csvCutscene(ScenePlacement.beginning),
+          ],
+        );
+      case GamePhase.cutsceneEnd:
+        return Stack(
+          children: [
+            _cutscene(),
+            if (_showingCsvEnd) _csvCutscene(ScenePlacement.end),
+          ],
+        );
+      case GamePhase.gameplay:
+        return _gameplay();
+      case GamePhase.completed:
+        return Stack(
+          children: [
+            _levelComplete(),
+            if (_showingCsvEnd) _csvCutscene(ScenePlacement.end),
+          ],
+        );
+    }
+  }
+
+  Widget _cutscene() {
+    final isRetry =
+        controller.phase == GamePhase.cutsceneEnd &&
+        controller.currentExplanation == FeedbackMessages.retry();
+
+    final cutsceneText = controller.currentExplanation.isNotEmpty
+        ? controller.currentExplanation
+        : (isRetry ? FeedbackMessages.retry() : FeedbackMessages.intro());
+
+    return Stack(
+      children: [
+        // Background
+        Image.asset(
+          spriteManager.getBackgroundAsset(),
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
+
+        // Sprite
+        if (frame != null)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 150),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: spriteYOffset),
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) =>
+                    Transform.translate(offset: Offset(0, value), child: child),
+                child: Image.asset(
+                  frame!.spriteAsset,
+                  height: 500,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+
+        // VN-style text box
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 80),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              decoration: BoxDecoration(
+                color: _subjectColor(widget.subject),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Text(
+                cutsceneText,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+
+        // Buttons
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: isRetry
+                ? Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: _retryLevel,
+                          child: const Text(
+                            'Retry Level',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[850],
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text(
+                            'Quit',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        // Handle sequencing for beginning and end CSV cutscenes.
+                        if (controller.phase == GamePhase.cutsceneStart) {
+                          // If CSV beginning hasn't finished yet, advance it if possible,
+                          // otherwise mark it finished so the view cutscene shows.
+                          if (!_csvBeginningFinished) {
+                            if (_csvHasLines()) {
+                              _csvRendererNext();
+                            } else {
+                              setState(() => _csvBeginningFinished = true);
+                            }
+                          } else {
+                            controller.finishCutscene();
+                          }
+                          return;
+                        }
+
+                        if (controller.phase == GamePhase.cutsceneEnd) {
+                          // If we're not yet showing the CSV end, start it when Continue
+                          // is pressed and CSV lines exist; otherwise finish.
+                          if (!_showingCsvEnd) {
+                            if (_csvHasLines()) {
+                              setState(() => _showingCsvEnd = true);
+                            } else {
+                              controller.finishCutscene();
+                            }
+                          } else {
+                            // If CSV end is being shown, advance it.
+                            if (_csvHasLines()) {
+                              _csvRendererNext();
+                            } else {
+                              controller.finishCutscene();
+                            }
+                          }
+                          return;
+                        }
+
+                        controller.finishCutscene();
+                      },
+                      child: const Text(
+                        'Continue',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _levelComplete() {
+    return Stack(
+      children: [
+        // Background (always display)
+        Image.asset(
+          spriteManager.getBackgroundAsset(),
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
+
+        // Sprite floating above bottom (nullable)
+        if (frame != null)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 150),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: spriteYOffset),
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, value),
+                    child: child,
+                  );
+                },
+                child: Image.asset(
+                  frame!.spriteAsset,
+                  height: 500,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+
+        // VN-style text box
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 80),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              decoration: BoxDecoration(
+                color: _subjectColor(widget.subject),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Text(
+                FeedbackMessages.levelComplete(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+
+        // Buttons
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: _playNextLevel,
+                    child: const Text(
+                      'Next Level',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[850],
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Quit', style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _gameplay() {
+    if (!controller.hasQuestions) {
+      return const Center(child: Text('No questions available.'));
+    }
+
+    final q = controller.currentQuestion;
+
+    return Stack(
+      children: [
+        // Background (always display)
+        Image.asset(
+          spriteManager.getBackgroundAsset(),
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
+
+        // Sprite floating slightly above bottom (nullable)
+        if (frame != null)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                bottom: 70,
+              ), // float above text box
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: spriteYOffset),
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, value),
+                    child: child,
+                  );
+                },
+                child: Image.asset(
+                  frame!.spriteAsset,
+                  height: 500,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+
+        // Text box (floating above buttons)
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: controller.showingExplanation
+                  ? 100
+                  : 250, // float above buttons or above choices
+            ),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              decoration: BoxDecoration(
+                color: _subjectColor(widget.subject),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Text(
+                controller.showingExplanation
+                    ? controller.currentExplanation
+                    : q.question,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+
+        // Choices or Continue button
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: controller.showingExplanation
+                ? SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: controller.nextQuestionOrRetry,
+                      child: const Text(
+                        'Continue',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ),
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(q.choices.length, (i) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[850],
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () => controller.submitAnswer(i),
+                            child: Text(
+                              q.choices[i],
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper function for per-subject text box color
+  Color _subjectColor(String subject) {
+    switch (subject.toLowerCase()) {
+      case 'math':
+        return const Color.fromARGB(255, 33, 53, 56);
+      case 'reading':
+        return const Color.fromARGB(255, 43, 27, 54);
+      case 'science':
+        return const Color.fromARGB(255, 46, 21, 21);
+      default:
+        return Colors.black87;
+    }
+  }
+}

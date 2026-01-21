@@ -24,4 +24,14 @@ class UserRepository {
       whereArgs: [profileID],
     );
   }
+
+  Future<int> update(User user) async {
+    final database = await _db.db;
+    return await database.update(
+      'userProfile',
+      user.toMap(),
+      where: 'profileID = ?',
+      whereArgs: [user.profileID],
+    );
+  }
 }

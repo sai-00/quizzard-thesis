@@ -1,0 +1,6 @@
+level,placement,order,dialogue,sprite state
+1,beginning,1,"You've recieved an invitation by the funny rogue",
+1,beginning,2,"This place doesn't seem very nice..",
+1,beginning,3,"Welcome to the cursed tower!",wrong
+1,beginning,4,"Let’s explore together!",correct
+1,end,1,"Great job! Let's move on. I'm scared of this fr",correct

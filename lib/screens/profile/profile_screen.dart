@@ -39,7 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (_) => const AddProfileForm(),
     );
 
-    // ✅ if a new profile was added, refresh the list
     if (added == true && mounted) {
       _listKey.currentState?.refresh();
     }
@@ -54,10 +53,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           IconButton(onPressed: _openMenu, icon: const Icon(Icons.menu)),
         ],
       ),
-      body: ProfileList(key: _listKey, onTap: _onProfileSelected),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAddProfileForm,
-        child: const Icon(Icons.add),
+      body: ProfileList(
+        key: _listKey,
+        onTap: _onProfileSelected,
+        onAdd: _openAddProfileForm,
       ),
     );
   }

@@ -7,7 +7,8 @@ typedef OnProfileTap = void Function(User user);
 
 class ProfileList extends StatefulWidget {
   final OnProfileTap? onTap;
-  const ProfileList({super.key, this.onTap});
+  final VoidCallback? onAdd;
+  const ProfileList({super.key, this.onTap, this.onAdd});
 
   @override
   // return the public state type
@@ -29,7 +30,6 @@ class ProfileListState extends State<ProfileList> {
     _future = repo.getAll();
   }
 
-  /// ✅ Public method so parent (ProfileScreen) can trigger a refresh
   Future<void> refresh() async {
     setState(() {
       _load();
@@ -69,13 +69,67 @@ class ProfileListState extends State<ProfileList> {
           );
         }
         final users = snap.data ?? [];
-        if (users.isEmpty) return const Center(child: Text('No profiles yet'));
-        return ListView.builder(
-          itemCount: users.length,
-          itemBuilder: (context, i) => ProfileCard(
-            user: users[i],
-            onTap: widget.onTap,
-            onDeleted: _onDeleted,
+        // Always show an inline "Add Profile" tile as the last item.
+        final total = users.length + 1;
+
+        // Center grid with max 2 columns
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 0.75,
+              ),
+              itemCount: total,
+              itemBuilder: (context, i) {
+                if (i == users.length) {
+                  // Add tile
+                  return InkWell(
+                    onTap: widget.onAdd,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade400),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.add,
+                              size: 48,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Add Profile',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final user = users[i];
+                return ProfileCard(
+                  user: user,
+                  onTap: widget.onTap,
+                  onDeleted: _onDeleted,
+                );
+              },
+            ),
           ),
         );
       },

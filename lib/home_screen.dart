@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/subject/subject_list.dart';
 import 'screens/progress/progress_tracker_list.dart';
+import 'screens/profile/edit_profile_form.dart';
 import 'repositories/user_repository.dart';
 import 'models/user.dart';
 
@@ -61,6 +62,19 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(title),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              // open edit profile form
+              final edited = await showDialog<bool>(
+                context: context,
+                builder: (_) => EditProfileForm(profileId: widget.profileId),
+              );
+              if (edited == true) {
+                _loadProfileName();
+              }
+            },
+          ),
           IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         ],
       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../repositories/progress_repository.dart';
-import 'game_content.dart';
+import '../game_loop/game_view.dart';
 
 class LevelsScreen extends StatefulWidget {
   final int subjID;
@@ -71,6 +71,7 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
             body: Center(child: CircularProgressIndicator()),
           );
         }
+        // Render levels as cards similar to subject cards, with subject-specific colors.
         return Scaffold(
           appBar: AppBar(
             title: Text('${widget.subjName} - ${widget.difficulty}'),
@@ -79,62 +80,144 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
             children: [
               ...levels.map((lvl) {
                 final unlocked = _isLevelUnlocked(lvl);
-                return ListTile(
-                  title: Text('Level $lvl'),
-                  subtitle: Text(unlocked ? 'Unlocked' : 'Locked'),
-                  enabled: unlocked,
-                  onTap: unlocked
-                      ? () async {
-                          // await the level route and refresh progress when user returns
-                          await Navigator.of(context).push<bool>(
-                            MaterialPageRoute(
-                              builder: (_) => GameContent(
-                                subjID: widget.subjID,
-                                subjName: widget.subjName,
-                                difficulty: widget.difficulty,
-                                level: lvl,
-                                profileId: widget.profileId,
+                final baseColor = _levelColor(widget.subjName.toLowerCase());
+                final color = unlocked ? baseColor : Colors.grey.shade700;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 10.0,
+                  ),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: InkWell(
+                      onTap: unlocked
+                          ? () async {
+                              await Navigator.of(context).push<bool>(
+                                MaterialPageRoute(
+                                  builder: (_) => GameView(
+                                    subjID: widget.subjID,
+                                    subject: widget.subjName,
+                                    difficulty: widget.difficulty,
+                                    level: lvl,
+                                    isBossLevel: false,
+                                    profileID: widget.profileId,
+                                  ),
+                                ),
+                              );
+                              setState(() {
+                                _future = _load();
+                              });
+                            }
+                          : null,
+                      child: Container(
+                        color: color,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18.0,
+                          vertical: 20.0,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Level $lvl',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: unlocked ? Colors.white : Colors.white70,
                               ),
                             ),
-                          );
-                          // reload progress and rebuild UI
-                          setState(() {
-                            _future = _load();
-                          });
-                        }
-                      : null,
+                            const SizedBox(height: 8),
+                            Text(
+                              unlocked ? 'Unlocked' : 'Locked',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: unlocked ? Colors.white : Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 );
               }),
               const Divider(),
               Builder(
                 builder: (ctx) {
                   final bossUnlocked = _isLevelUnlocked(99);
-                  return ListTile(
-                    title: const Text('Final Boss'),
-                    subtitle: Text(
-                      bossUnlocked
-                          ? 'Unlocked'
-                          : 'Locked (complete level 5 to unlock)',
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 10.0,
                     ),
-                    enabled: bossUnlocked,
-                    onTap: bossUnlocked
-                        ? () async {
-                            await Navigator.of(context).push<bool>(
-                              MaterialPageRoute(
-                                builder: (_) => GameContent(
-                                  subjID: widget.subjID,
-                                  subjName: widget.subjName,
-                                  difficulty: widget.difficulty,
-                                  level: 99,
-                                  profileId: widget.profileId,
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: InkWell(
+                        onTap: bossUnlocked
+                            ? () async {
+                                await Navigator.of(context).push<bool>(
+                                  MaterialPageRoute(
+                                    builder: (_) => GameView(
+                                      subjID: widget.subjID,
+                                      subject: widget.subjName,
+                                      difficulty: widget.difficulty,
+                                      level: 99,
+                                      isBossLevel: true,
+                                      profileID: widget.profileId,
+                                    ),
+                                  ),
+                                );
+                                setState(() {
+                                  _future = _load();
+                                });
+                              }
+                            : null,
+                        child: Container(
+                          color: bossUnlocked
+                              ? Colors.red
+                              : Colors.grey.shade700,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18.0,
+                            vertical: 20.0,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Final Boss',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: bossUnlocked
+                                      ? Colors.white
+                                      : Colors.white70,
                                 ),
                               ),
-                            );
-                            setState(() {
-                              _future = _load();
-                            });
-                          }
-                        : null,
+                              const SizedBox(height: 8),
+                              Text(
+                                bossUnlocked
+                                    ? 'Unlocked'
+                                    : 'Locked (complete level 5 to unlock)',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: bossUnlocked
+                                      ? Colors.white
+                                      : Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   );
                 },
               ),
@@ -143,5 +226,20 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
         );
       },
     );
+  }
+
+  Color _levelColor(String subj) {
+    switch (subj) {
+      case 'math':
+        return const Color.fromARGB(255, 16, 48, 53);
+      case 'reading':
+      case 'eng':
+        return const Color.fromARGB(255, 37, 13, 53);
+      case 'science':
+      case 'sci':
+        return const Color.fromARGB(255, 46, 10, 10);
+      default:
+        return Colors.grey.shade800;
+    }
   }
 }
