@@ -7,6 +7,7 @@ Thesis project
 - Android Studio (Recommended)
   Includes Android SDK and emulator support.
   (https://developer.android.com/studio/install)
+- When using Windows : Turn Developer Mode on in settings.
 > Note : Other IDEs/editors can work as long as Flutter and Android SDK are properly installed
 
 ## SETUP
