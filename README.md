@@ -1,9 +1,18 @@
 # Quizzard
 Thesis project
 
+## PREREQUISITES
+- Flutter SDK
+  (https://docs.flutter.dev/install)
+- Android Studio (Recommended)
+  Includes Android SDK and emulator support.
+  (https://developer.android.com/studio/install)
+> Note : Other IDEs/editors can work as long as Flutter and Android SDK are properly installed
+
 ## SETUP
+> Using VS Code
 1. Clone the repository 
-    - In a terminal: Run `git clone https://github.com/sai-00/quizzard-thesis.git`
+   In a terminal: Run `git clone https://github.com/sai-00/quizzard-thesis.git`
 2. Open project, navigate to root folder.
 3. Open a terminal in the root folder (on VS Code: `ctrl + J`).
 4. Run `flutter pub get` to install dependencies.
