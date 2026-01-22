@@ -13,15 +13,34 @@ class QuestionCrudScreen extends StatefulWidget {
 class _QuestionCrudScreenState extends State<QuestionCrudScreen> {
   final _repo = QuestionRepository();
   late Future<List<Question>> _future;
+  List<Question> _all = [];
+  List<Question> _filtered = [];
+  final TextEditingController _searchCtrl = TextEditingController();
+  int? _selectedSubjID;
+  String? _selectedDifficulty;
+  List<Map<String, dynamic>> _subjects = [];
 
   @override
   void initState() {
     super.initState();
     _load();
+    _searchCtrl.addListener(_applyFilters);
+    // load subjects for dropdown (one-time)
+    QuestionRepository().getSubjects().then((s) {
+      if (!mounted) return;
+      setState(() => _subjects = s);
+    });
   }
 
   void _load() {
     _future = _repo.getAll();
+    _future.then((list) {
+      if (!mounted) return;
+      setState(() {
+        _all = list;
+        _filtered = List<Question>.from(_all);
+      });
+    });
   }
 
   Future<void> _openForm({Question? initial}) async {
@@ -30,7 +49,7 @@ class _QuestionCrudScreenState extends State<QuestionCrudScreen> {
       builder: (_) => QuestionForm(initial: initial),
     );
     if (res == true) {
-      setState(() => _load());
+      _load();
     }
   }
 
@@ -41,8 +60,31 @@ class _QuestionCrudScreenState extends State<QuestionCrudScreen> {
 
     if (success) {
       if (!mounted) return;
-      Navigator.of(context).pop();
+      // refresh list but stay on this screen
+      _load();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Question deleted')));
     }
+  }
+
+  void _applyFilters() {
+    final q = _searchCtrl.text.trim().toLowerCase();
+    setState(() {
+      _filtered = _all.where((item) {
+        if (q.isNotEmpty && !item.questionText.toLowerCase().contains(q)) {
+          return false;
+        }
+        if (_selectedSubjID != null && item.subjID != _selectedSubjID) {
+          return false;
+        }
+        if (_selectedDifficulty != null &&
+            item.difficulty != _selectedDifficulty) {
+          return false;
+        }
+        return true;
+      }).toList();
+    });
   }
 
   @override
@@ -55,14 +97,110 @@ class _QuestionCrudScreenState extends State<QuestionCrudScreen> {
           if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
-          final items = snap.data ?? [];
-          if (items.isEmpty) return const Center(child: Text('No questions'));
-          return ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, i) => QuestionCard(
-              question: items[i],
-              onEdit: () => _openForm(initial: items[i]),
-              onDelete: () => _deleteQuestion(items[i].questionID!),
+          // build search and filters UI above the list
+          return Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              children: [
+                // Search field
+                TextField(
+                  controller: _searchCtrl,
+                  decoration: const InputDecoration(
+                    hintText: 'Search question here',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Filters: subject and difficulty
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButton<int?>(
+                        value: _selectedSubjID,
+                        isExpanded: true,
+                        hint: const Text('Select Subject'),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('All Subjects'),
+                          ),
+                          ..._subjects.map(
+                            (s) => DropdownMenuItem<int?>(
+                              value: s['subjID'] as int,
+                              child: Text(s['subjName'] as String),
+                            ),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          setState(() => _selectedSubjID = v);
+                          _applyFilters();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButton<String?>(
+                              value: _selectedDifficulty,
+                              isExpanded: true,
+                              hint: const Text('Select Difficulty'),
+                              items: const [
+                                DropdownMenuItem<String?>(
+                                  value: null,
+                                  child: Text('All Difficulties'),
+                                ),
+                                DropdownMenuItem<String?>(
+                                  value: 'Easy',
+                                  child: Text('Easy'),
+                                ),
+                                DropdownMenuItem<String?>(
+                                  value: 'Medium',
+                                  child: Text('Medium'),
+                                ),
+                                DropdownMenuItem<String?>(
+                                  value: 'Hard',
+                                  child: Text('Hard'),
+                                ),
+                              ],
+                              onChanged: (v) {
+                                setState(() => _selectedDifficulty = v);
+                                _applyFilters();
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              setState(() {
+                                _searchCtrl.clear();
+                                _selectedSubjID = null;
+                                _selectedDifficulty = null;
+                                _filtered = List<Question>.from(_all);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: _filtered.isEmpty
+                      ? const Center(child: Text('No questions'))
+                      : ListView.builder(
+                          itemCount: _filtered.length,
+                          itemBuilder: (context, i) => QuestionCard(
+                            question: _filtered[i],
+                            onEdit: () => _openForm(initial: _filtered[i]),
+                            onDelete: () =>
+                                _deleteQuestion(_filtered[i].questionID!),
+                          ),
+                        ),
+                ),
+              ],
             ),
           );
         },

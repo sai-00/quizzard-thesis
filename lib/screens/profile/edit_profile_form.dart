@@ -18,15 +18,10 @@ class EditProfileForm extends StatefulWidget {
 class _EditProfileFormState extends State<EditProfileForm> {
   final _form = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  bool _nameExists = false;
   String? _avatarPath;
   bool _loading = true;
   bool _saving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUser();
-  }
 
   Future<void> _loadUser() async {
     final repo = UserRepository();
@@ -39,6 +34,17 @@ class _EditProfileFormState extends State<EditProfileForm> {
     _nameController.text = user.name;
     _avatarPath = user.avatar;
     setState(() => _loading = false);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+    _nameController.addListener(() {
+      if (_nameExists && _nameController.text.trim().isNotEmpty) {
+        setState(() => _nameExists = false);
+      }
+    });
   }
 
   @override
@@ -69,6 +75,14 @@ class _EditProfileFormState extends State<EditProfileForm> {
                           ? 'Enter a name'
                           : null,
                     ),
+                    if (_nameExists)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          'User exists, enter a different name',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
@@ -126,6 +140,25 @@ class _EditProfileFormState extends State<EditProfileForm> {
       avatar: _avatarPath ?? '',
     );
     try {
+      // check duplicate names among other users
+      final users = await repo.getAll();
+      final exists = users.any(
+        (u) =>
+            u.profileID != widget.profileId &&
+            u.name.toLowerCase() == updated.name.toLowerCase(),
+      );
+      if (exists) {
+        if (!mounted) return;
+        setState(() {
+          _nameExists = true;
+          _saving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User exists, enter a different name')),
+        );
+        return;
+      }
+
       await repo.update(updated);
       if (!mounted) return;
       Navigator.of(context).pop(true);

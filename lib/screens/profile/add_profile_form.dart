@@ -18,6 +18,8 @@ class AddProfileForm extends StatefulWidget {
 class _AddProfileFormState extends State<AddProfileForm> {
   final _form = GlobalKey<FormState>();
   String _name = '';
+  final TextEditingController _nameController = TextEditingController();
+  bool _nameExists = false;
   String? _avatarPath;
   bool _saving = false;
 
@@ -32,11 +34,20 @@ class _AddProfileFormState extends State<AddProfileForm> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
+                controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Name'),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Enter a name' : null,
                 onSaved: (v) => _name = v!.trim(),
               ),
+              if (_nameExists)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    'User exists, enter a different name',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
@@ -76,7 +87,10 @@ class _AddProfileFormState extends State<AddProfileForm> {
     if (!_form.currentState!.validate()) return;
     _form.currentState!.save();
 
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _nameExists = false;
+    });
 
     final userRepo = UserRepository();
     final questionRepo = QuestionRepository();
@@ -85,6 +99,21 @@ class _AddProfileFormState extends State<AddProfileForm> {
     bool creationFailed = false;
 
     try {
+      // check duplicate name (case-insensitive)
+      final users = await userRepo.getAll();
+      final exists = users.any(
+        (u) => u.name.toLowerCase() == _name.toLowerCase(),
+      );
+      if (exists) {
+        if (!mounted) return;
+        setState(() => _nameExists = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User exists, enter a different name')),
+        );
+        setState(() => _saving = false);
+        return;
+      }
+
       final newId = await userRepo.add(
         User(name: _name, avatar: _avatarPath ?? ''),
       );
@@ -119,8 +148,23 @@ class _AddProfileFormState extends State<AddProfileForm> {
     }
 
     if (!mounted) return;
-
     _handleResult(creationFailed);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(() {
+      if (_nameExists && _nameController.text.trim().isNotEmpty) {
+        setState(() => _nameExists = false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 
   Future<void> _pickProfilePicture() async {
