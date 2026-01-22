@@ -34,6 +34,7 @@ class SceneRenderer extends StatefulWidget {
   final Color textBoxColor;
   final VoidCallback? onNext;
   final VoidCallback? onNoLines;
+  final ValueChanged<bool>? onLoaded;
   final String? backgroundAsset;
 
   const SceneRenderer({
@@ -48,6 +49,7 @@ class SceneRenderer extends StatefulWidget {
     required this.textBoxColor,
     this.onNext,
     this.onNoLines,
+    this.onLoaded,
     this.backgroundAsset,
   });
 
@@ -113,6 +115,11 @@ class SceneRendererState extends State<SceneRenderer> {
     setState(() {
       _lines = lines;
       _loading = false;
+    });
+
+    // notify parent whether we loaded any lines
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onLoaded?.call(_lines.isNotEmpty);
     });
 
     if (_lines.isNotEmpty) {

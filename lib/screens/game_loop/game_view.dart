@@ -39,6 +39,7 @@ class _GameViewState extends State<GameView> {
   final GlobalKey<SceneRendererState> _sceneKey = GlobalKey();
   bool _csvBeginningFinished = false;
   bool _showingCsvEnd = false;
+  bool _csvEndRequested = false;
 
   @override
   void initState() {
@@ -61,9 +62,14 @@ class _GameViewState extends State<GameView> {
 
     controller.onUpdate = () {
       if (!mounted) return;
-      // If we reached the completed phase, start by showing CSV end overlay
+      // When completed, request the end CSV to be evaluated. We don't
+      // immediately show it because the SceneRenderer loads asynchronously;
+      // instead we mount it offstage and wait for its onLoaded callback to
+      // tell us whether it has lines to show. This prevents flicker while
+      // ensuring end cutscenes with lines are displayed.
       if (controller.phase == GamePhase.completed) {
-        _showingCsvEnd = true;
+        _csvEndRequested = true;
+        _showingCsvEnd = false;
       }
 
       setState(() {});
@@ -206,6 +212,10 @@ class _GameViewState extends State<GameView> {
           setState(() => _csvBeginningFinished = true);
         },
         onNext: _csvRendererNext,
+        onLoaded: (hasLines) {
+          // beginning placement: if there are no lines, mark finished
+          if (!hasLines) setState(() => _csvBeginningFinished = true);
+        },
         textBoxColor: _subjectColor(widget.subject),
         key: _sceneKey,
       );
@@ -229,6 +239,17 @@ class _GameViewState extends State<GameView> {
         // If no CSV lines at end, just hide overlay immediately
         setState(() => _showingCsvEnd = false);
       },
+      onLoaded: (hasLines) {
+        // If the parent requested the end CSV (level completed), show the
+        // overlay only when the renderer reports it actually has lines.
+        if (controller.phase == GamePhase.completed) {
+          setState(() {
+            _showingCsvEnd = hasLines;
+            // clear the request once handled
+            _csvEndRequested = false;
+          });
+        }
+      },
       textBoxColor: _subjectColor(widget.subject),
       key: _sceneKey,
     );
@@ -250,7 +271,11 @@ class _GameViewState extends State<GameView> {
         return Stack(
           children: [
             _cutscene(),
-            if (_showingCsvEnd) _csvCutscene(ScenePlacement.end),
+            if (_csvEndRequested || _showingCsvEnd)
+              Offstage(
+                offstage: !_showingCsvEnd,
+                child: _csvCutscene(ScenePlacement.end),
+              ),
           ],
         );
       case GamePhase.gameplay:
@@ -259,7 +284,11 @@ class _GameViewState extends State<GameView> {
         return Stack(
           children: [
             _levelComplete(),
-            if (_showingCsvEnd) _csvCutscene(ScenePlacement.end),
+            if (_csvEndRequested || _showingCsvEnd)
+              Offstage(
+                offstage: !_showingCsvEnd,
+                child: _csvCutscene(ScenePlacement.end),
+              ),
           ],
         );
     }
@@ -283,7 +312,6 @@ class _GameViewState extends State<GameView> {
           width: double.infinity,
           height: double.infinity,
         ),
-
         // Sprite
         if (frame != null)
           Align(
@@ -599,6 +627,45 @@ class _GameViewState extends State<GameView> {
           ),
 
         // Text box (floating above buttons)
+        // Progress bar and question counter (top)
+        Align(
+          alignment: Alignment.topCenter,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Question ${controller.answeredCount}/${controller.totalQuestions}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: controller.totalQuestions > 0
+                          ? (controller.answeredCount /
+                                controller.totalQuestions)
+                          : 0,
+                      minHeight: 6,
+                      backgroundColor: Colors.white24,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.purpleAccent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(

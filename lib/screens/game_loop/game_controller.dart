@@ -19,6 +19,7 @@ class GameController {
   List<GameQuestion> _questions = [];
   int currentIndex = 0;
   int correctCount = 0;
+  int wrongCount = 0;
 
   GamePhase phase = GamePhase.loading;
   AnswerResult lastAnswerResult = AnswerResult.none;
@@ -28,6 +29,7 @@ class GameController {
   void Function()? onUpdate;
 
   int passingScore = 0;
+  final int maxWrongBeforeRetry;
 
   GameController({
     required this.repository,
@@ -36,6 +38,7 @@ class GameController {
     required this.level,
     required this.isBossLevel,
     required this.profileID,
+    this.maxWrongBeforeRetry = 3,
   });
 
   /// Initialize questions and show intro cutscene
@@ -65,6 +68,9 @@ class GameController {
   GameQuestion get currentQuestion => _questions[currentIndex];
   bool get hasQuestions => _questions.isNotEmpty;
   bool get isLastQuestion => currentIndex == _questions.length - 1;
+  int get totalQuestions => _questions.length;
+  int get answeredCount => currentIndex + (showingExplanation ? 1 : 0);
+  bool get reachedMaxWrong => wrongCount >= maxWrongBeforeRetry;
 
   void _notify() => onUpdate?.call();
 
@@ -74,6 +80,7 @@ class GameController {
     showingExplanation = false;
     lastAnswerResult = AnswerResult.none;
     correctCount = 0;
+    wrongCount = 0;
     _notify();
   }
 
@@ -82,13 +89,30 @@ class GameController {
     final correct = index == currentQuestion.correctIndex;
     lastAnswerResult = correct ? AnswerResult.correct : AnswerResult.wrong;
 
-    if (correct) correctCount++;
+    if (correct) {
+      correctCount++;
+      showingExplanation = true;
+      currentExplanation = FeedbackMessages.correct();
+      _notify();
+      return;
+    }
 
+    // incorrect
+    wrongCount++;
+
+    // if reached max wrong threshold, trigger immediate retry cutscene
+    if (wrongCount >= maxWrongBeforeRetry) {
+      phase = GamePhase.cutsceneEnd;
+      showingExplanation = true;
+      currentExplanation = FeedbackMessages.retry();
+      _notify();
+      return;
+    }
+
+    // otherwise show incorrect + explanation
     showingExplanation = true;
-    currentExplanation = correct
-        ? FeedbackMessages.correct()
-        : FeedbackMessages.incorrect();
-
+    final explanation = currentQuestion.correctExplanation;
+    currentExplanation = '${FeedbackMessages.incorrect()}\n\n$explanation';
     _notify();
   }
 
