@@ -317,7 +317,7 @@ class _GameViewState extends State<GameView> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 150),
+              padding: const EdgeInsets.only(bottom: 70),
               child: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: spriteYOffset),
                 duration: const Duration(milliseconds: 180),
@@ -485,7 +485,7 @@ class _GameViewState extends State<GameView> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 150),
+              padding: const EdgeInsets.only(bottom: 70),
               child: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: spriteYOffset),
                 duration: const Duration(milliseconds: 180),
@@ -713,7 +713,7 @@ class _GameViewState extends State<GameView> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
+                        backgroundColor: const Color.fromARGB(255, 72, 39, 102),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -722,7 +722,10 @@ class _GameViewState extends State<GameView> {
                       onPressed: controller.nextQuestionOrRetry,
                       child: const Text(
                         'Continue',
-                        style: TextStyle(fontSize: 20),
+                        style: TextStyle(
+                          fontSize: 20, 
+                          color: Colors.white,
+                          ),
                       ),
                     ),
                   )
@@ -735,7 +738,7 @@ class _GameViewState extends State<GameView> {
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[850],
+                              backgroundColor: const Color.fromARGB(255, 25, 25, 26),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -744,7 +747,7 @@ class _GameViewState extends State<GameView> {
                             onPressed: () => controller.submitAnswer(i),
                             child: Text(
                               q.choices[i],
-                              style: const TextStyle(fontSize: 18),
+                              style: const TextStyle(fontSize: 18, color: Colors.white),
                             ),
                           ),
                         ),

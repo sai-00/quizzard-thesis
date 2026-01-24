@@ -53,7 +53,7 @@ class SubjectCard extends StatelessWidget {
                 color: _subjectColor(subjName.toLowerCase()),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18.0,
-                  vertical: 12.0,
+                  vertical: 20.0,
                 ),
                 child: Column(
                   children: [

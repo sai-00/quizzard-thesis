@@ -4,3 +4,5 @@ level,placement,order,dialogue,sprite state
 1,beginning,3,"Welcome to the cursed tower!",wrong
 1,beginning,4,"Let’s explore together!",correct
 1,end,1,"Great job! Let's move on. I'm scared of this fr",correct
+
+99,beginning,1,"Alright, let's rock",talking

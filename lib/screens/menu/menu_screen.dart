@@ -40,9 +40,23 @@ class MenuScreen extends StatelessWidget {
                 ),
               ),
             ),
+            ListTile(
+            leading: const Icon(Icons.download),
+            title: const Text('Download CSV templates'),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const AddCsvScreen())),
+          ),
           ListTile(
             leading: const Icon(Icons.upload_file),
-            title: const Text('Add CSV'),
+            title: const Text('Add Questions CSV'),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const AddCsvScreen())),
+          ),
+          ListTile(
+            leading: const Icon(Icons.upload_file),
+            title: const Text('Add Cutscenes CSV'),
             onTap: () => Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const AddCsvScreen())),
