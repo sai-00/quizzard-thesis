@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../subject/subject_list.dart';
 import '../progress/progress_tracker_list.dart';
+
 import 'add_csv.dart';
+import 'add_cutscene_csv.dart';
+import 'download_csv.dart';
+import 'reset_config.dart';
 
 class MenuScreen extends StatelessWidget {
   final bool hideSubjects;
@@ -43,28 +47,35 @@ class MenuScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.download),
             title: const Text('Download CSV templates'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const DownloadCsvScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.upload_file),
+            title: const Text('Upload Questions CSV'),
             onTap: () => Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const AddCsvScreen())),
           ),
           ListTile(
             leading: const Icon(Icons.upload_file),
-            title: const Text('Add Questions CSV'),
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const AddCsvScreen())),
-          ),
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Add Cutscenes CSV'),
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const AddCsvScreen())),
+            title: const Text('Upload Cutscenes CSV'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AddCutsceneCsvScreen()),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.question_answer),
             title: const Text('Manage Questions'),
             onTap: () => Navigator.of(context).pushNamed('/questions'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings_backup_restore),
+            title: const Text('Reset Configurations'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ResetConfigScreen()),
+            ),
           ),
           if (!hideLogout)
             ListTile(

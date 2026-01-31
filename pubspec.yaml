@@ -115,6 +115,10 @@ flutter:
     - lib/screens/game_loop/scenes/science/science_medium.csv
     - lib/screens/game_loop/scenes/science/science_hard.csv
 
+    # templates
+    - templates/csv-question.csv
+    - templates/csv-cutscene.csv
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

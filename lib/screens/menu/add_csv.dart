@@ -1,45 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+
 import '../../services/csv_sync_service.dart';
 
 // Simple CSV paste/import UI to avoid requiring file_picker package.
 class AddCsvScreen extends StatelessWidget {
   const AddCsvScreen({super.key});
 
-  Future<void> _showPasteDialog(BuildContext context) async {
-    final controller = TextEditingController();
-    final service = CsvSyncService(); // ensure the service class is referenced
+  Future<void> _pickFileAndImport(BuildContext context) async {
+    final service = CsvSyncService();
 
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Paste CSV content'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: TextField(
-            controller: controller,
-            maxLines: 12,
-            decoration: const InputDecoration(hintText: 'Paste CSV here'),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Import'),
-          ),
-        ],
-      ),
-    );
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+        allowMultiple: false,
+      );
 
-    if (result == true && controller.text.trim().isNotEmpty) {
-      await service.importCsvString(controller.text);
+      if (result == null || result.files.isEmpty) return; // user cancelled
+
+      final path = result.files.single.path;
+      if (path == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Selected file has no path')),
+          );
+        }
+        return;
+      }
+
+      await service.importCsvFile(path);
+
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('CSV imported')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error importing CSV: $e')));
       }
     }
   }
@@ -50,8 +51,8 @@ class AddCsvScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Import CSV')),
       body: Center(
         child: ElevatedButton(
-          child: const Text('Paste CSV and Import'),
-          onPressed: () => _showPasteDialog(context),
+          child: const Text('Choose CSV file and Import'),
+          onPressed: () => _pickFileAndImport(context),
         ),
       ),
     );

@@ -176,15 +176,68 @@ class _GameViewState extends State<GameView> {
     body: Stack(
       children: [
         _buildPhase(),
-        // Top-left menu button
+        // Top menu: left = pause/menu, right = skip cutscene
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white),
-              onPressed: () {
-                showDialog(context: context, builder: (_) => const GameMenu());
-              },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.white),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => const GameMenu(),
+                      );
+                    },
+                  ),
+                ),
+
+                // Skip cutscene button
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: IconButton(
+                    // Display >> as requested
+                    icon: const Text(
+                      '>>',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () {
+                      // If we're in the intro cutscene, skip into gameplay
+                      if (controller.phase == GamePhase.cutsceneStart) {
+                        setState(() {
+                          _csvBeginningFinished = true;
+                        });
+                        controller.finishCutscene();
+                      } else if (controller.phase == GamePhase.cutsceneEnd ||
+                          controller.phase == GamePhase.completed) {
+                        // Hide CSV end overlay if visible
+                        setState(() {
+                          _showingCsvEnd = false;
+                          _csvEndRequested = false;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ),
