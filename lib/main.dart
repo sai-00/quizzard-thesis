@@ -12,7 +12,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'dart:io';
 
-
 void main() {
   // Only initialize ffi on desktop platforms
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {

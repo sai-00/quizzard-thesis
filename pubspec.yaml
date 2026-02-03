@@ -104,17 +104,17 @@ flutter:
     - assets/art/sprites/sci/sci-neutral.png
 
     # csv files
-    - lib/screens/game_loop/scenes/math/math_easy.csv
-    - lib/screens/game_loop/scenes/math/math_medium.csv
-    - lib/screens/game_loop/scenes/math/math_hard.csv
+    - assets/art/scenes/math/math_easy.csv
+    - assets/art/scenes/math/math_medium.csv
+    - assets/art/scenes/math/math_hard.csv
 
-    - lib/screens/game_loop/scenes/reading/reading_easy.csv
-    - lib/screens/game_loop/scenes/reading/reading_medium.csv
-    - lib/screens/game_loop/scenes/reading/reading_hard.csv
+    - assets/art/scenes/reading/reading_easy.csv
+    - assets/art/scenes/reading/reading_medium.csv
+    - assets/art/scenes/reading/reading_hard.csv
 
-    - lib/screens/game_loop/scenes/science/science_easy.csv
-    - lib/screens/game_loop/scenes/science/science_medium.csv
-    - lib/screens/game_loop/scenes/science/science_hard.csv
+    - assets/art/scenes/science/science_easy.csv
+    - assets/art/scenes/science/science_medium.csv
+    - assets/art/scenes/science/science_hard.csv
 
     # templates
     - templates/csv-question.csv

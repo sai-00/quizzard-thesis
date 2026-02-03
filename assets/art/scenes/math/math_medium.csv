@@ -1,0 +1,6 @@
+level,placement,order,dialogue,sprite state
+1,beginning,1,"These rooms already are starting to look the same...",wrong
+2,beginning,2,"I hope we can get out of here soon.",wrong
+3,beginning,3,"Wait, I think I see something ahead!",correct
+4,beginning,4,"Let's check it out!",correct
+1,end,1,"Phew! That was close. Let's keep going.",correct

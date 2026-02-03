@@ -724,7 +724,7 @@ class _GameViewState extends State<GameView> {
           child: Padding(
             padding: EdgeInsets.only(
               bottom: controller.showingExplanation
-                  ? 250
+                  ? 100
                   : 300, // float above buttons or above choices
             ),
             child: Container(
