@@ -390,7 +390,7 @@ class _GameViewState extends State<GameView> {
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: EdgeInsets.only(bottom: 80),
+            padding: EdgeInsets.only(bottom: 100),
             child: Container(
               width: MediaQuery.of(context).size.width * 0.9,
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
@@ -562,7 +562,7 @@ class _GameViewState extends State<GameView> {
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 80),
+            padding: const EdgeInsets.only(bottom: 100),
             child: Container(
               width: MediaQuery.of(context).size.width * 0.9,
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
@@ -724,8 +724,8 @@ class _GameViewState extends State<GameView> {
           child: Padding(
             padding: EdgeInsets.only(
               bottom: controller.showingExplanation
-                  ? 100
-                  : 250, // float above buttons or above choices
+                  ? 250
+                  : 300, // float above buttons or above choices
             ),
             child: Container(
               width: MediaQuery.of(context).size.width * 0.9,

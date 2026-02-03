@@ -84,7 +84,7 @@ class SceneRendererState extends State<SceneRenderer> {
 
     // Prefer custom CSV placed in the app documents directory under
     // `custom/<subject>/`. If not found, fall back to bundled asset at
-    // `lib/screens/game_loop/scenes/<subject>/<subject>_<difficulty>.csv`.
+    // `assets/art/scenes/<subject>/<subject>_<difficulty>.csv`.
     final docsDir = await getApplicationDocumentsDirectory();
     final customPath =
         '${docsDir.path}${Platform.pathSeparator}custom${Platform.pathSeparator}${widget.subject.name}${Platform.pathSeparator}$filename';
@@ -130,8 +130,9 @@ class SceneRendererState extends State<SceneRenderer> {
       }
     } else {
       final assetPath =
-          'lib/screens/game_loop/scenes/${widget.subject.name}/$filename';
+          'assets/art/scenes/${widget.subject.name}/${widget.subject.name}_${widget.difficulty.toLowerCase()}.csv';
       raw = await rootBundle.loadString(assetPath);
+      debugPrint('Playing $assetPath');
     }
     // Normalize common problematic characters (curly quotes, non-breaking spaces,
     // BOM) to simple ASCII equivalents so the UI fonts render them reliably.
@@ -283,7 +284,7 @@ class SceneRendererState extends State<SceneRenderer> {
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 80),
+            padding: const EdgeInsets.only(bottom: 100),
             child: Container(
               width: MediaQuery.of(context).size.width * 0.9,
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),

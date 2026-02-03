@@ -1,10 +1,10 @@
 // ignore_for_file: use_super_parameters
 
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class DownloadCsvScreen extends StatefulWidget {
   const DownloadCsvScreen({Key? key}) : super(key: key);
@@ -16,48 +16,68 @@ class DownloadCsvScreen extends StatefulWidget {
 class _DownloadCsvScreenState extends State<DownloadCsvScreen> {
   bool _isSaving = false;
 
-  Future<void> _downloadWithSaveDialog(
-    String assetPath,
-    String suggestedName,
-  ) async {
+  /// Main function to save an asset CSV
+  Future<void> _downloadCsv(String assetPath, String suggestedName) async {
     setState(() => _isSaving = true);
+
     try {
+      // Load the bytes from assets
       final data = await rootBundle.load(assetPath);
       final bytes = data.buffer.asUint8List();
 
-      final String? dirPath = await FilePicker.platform.getDirectoryPath();
+      String? dirPath;
+
+      // Android 9+: need to request storage permission if user wants to pick folder
+      if (Platform.isAndroid) {
+        final status = await Permission.storage.request();
+        if (!status.isGranted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Storage permission denied')),
+          );
+          return;
+        }
+      }
+
+      // Ask the user for directory
+      dirPath = await FilePicker.platform.getDirectoryPath();
+
       if (dirPath == null) {
-        // user cancelled
+        // User cancelled
         return;
       }
 
       if (!mounted) return;
 
+      // Ask for filename
       final filename = await _askFileName(context, suggestedName);
       if (filename == null || filename.isEmpty) return;
+
       final name = filename.toLowerCase().endsWith('.csv')
           ? filename
           : '$filename.csv';
 
       final file = File('$dirPath/$name');
+
       await file.writeAsBytes(bytes, flush: true);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Saved to ${file.path}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Saved to ${file.path}')),
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error saving file: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving file: $e')),
+      );
     } finally {
       setState(() => _isSaving = false);
     }
   }
 
+  /// Show dialog to ask user for file name
   Future<String?> _askFileName(BuildContext context, String initial) async {
     final controller = TextEditingController(text: initial);
+
     final result = await showDialog<String?>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -78,6 +98,7 @@ class _DownloadCsvScreenState extends State<DownloadCsvScreen> {
         ],
       ),
     );
+
     return result;
   }
 
@@ -88,28 +109,22 @@ class _DownloadCsvScreenState extends State<DownloadCsvScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('download questions csv template'),
+          const Text('Download questions CSV template'),
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: _isSaving
                 ? null
-                : () => _downloadWithSaveDialog(
-                    'templates/csv-question.csv',
-                    'csv-question.csv',
-                  ),
-            child: const Text('download'),
+                : () => _downloadCsv('templates/csv-question.csv', 'csv-question'),
+            child: const Text('Download'),
           ),
           const SizedBox(height: 24),
-          const Text('download cutscene csv template'),
+          const Text('Download cutscene CSV template'),
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: _isSaving
                 ? null
-                : () => _downloadWithSaveDialog(
-                    'templates/csv-cutscene.csv',
-                    'csv-cutscene.csv',
-                  ),
-            child: const Text('download'),
+                : () => _downloadCsv('templates/csv-cutscene.csv', 'csv-cutscene'),
+            child: const Text('Download'),
           ),
         ],
       ),

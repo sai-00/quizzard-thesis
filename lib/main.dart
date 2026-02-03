@@ -10,10 +10,15 @@ import 'screens/questions/question_crud_screen.dart';
 // (add dependency: sqflite_common_ffi in pubspec.yaml)
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'dart:io';
+
+
 void main() {
-  // Initialize sqflite for desktop / Windows so databaseFactory is available
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  // Only initialize ffi on desktop platforms
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
 
   runApp(const MyApp());
 }
