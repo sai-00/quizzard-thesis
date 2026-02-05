@@ -8,6 +8,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../db/quizzard_db.dart';
 
 class CustomConfigScreen extends StatefulWidget {
+  // ignore: use_super_parameters
   const CustomConfigScreen({Key? key}) : super(key: key);
 
   @override
@@ -92,7 +93,7 @@ class _CustomConfigScreenState extends State<CustomConfigScreen> {
       var allExist = true;
       for (final s in _subjects) {
         for (final d in _difficulties) {
-          final f = File(p.join(docs.path, 'custom', s, '${s}_${d}.csv'));
+          final f = File(p.join(docs.path, 'custom', s, '${s}_$d.csv'));
           if (!await f.exists()) {
             allExist = false;
             break;

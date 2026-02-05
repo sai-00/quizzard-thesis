@@ -102,7 +102,10 @@ class _EditProfileFormState extends State<EditProfileForm> {
                               height: 64,
                               child: _avatarPath!.startsWith('assets/')
                                   ? Image.asset(_avatarPath!, fit: BoxFit.cover)
-                                  : Image.file(File(_avatarPath!), fit: BoxFit.cover),
+                                  : Image.file(
+                                      File(_avatarPath!),
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                             const SizedBox(height: 6),
                             Text(

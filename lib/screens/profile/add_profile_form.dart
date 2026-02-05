@@ -72,7 +72,10 @@ class _AddProfileFormState extends State<AddProfileForm> {
                       const SizedBox(height: 6),
                       Text(
                         _avatarPath!.split('/').last,
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
