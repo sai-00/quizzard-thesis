@@ -120,6 +120,18 @@ flutter:
     - templates/csv-question.csv
     - templates/csv-cutscene.csv
 
+    # icons
+    - assets/icons/APPLE.png
+    - assets/icons/BANANA.png
+    - assets/icons/ORANGE.png
+    - assets/icons/PINEAPPLE.png
+    - assets/icons/GRAPES.png
+    - assets/icons/EGGPLANT.png
+    - assets/icons/LEMON.png
+    - assets/icons/MANGO.png
+    - assets/icons/STRAWBERRY.png
+    - assets/icons/WATERMELON.png
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

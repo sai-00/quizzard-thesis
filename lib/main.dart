@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'navigation/route_observer.dart';
 import 'screens/profile/profile_screen.dart';
+import 'splash_screen.dart';
 import 'home_screen.dart';
 import 'screens/menu/menu_screen.dart';
 import 'screens/questions/question_crud_screen.dart';
@@ -55,8 +56,9 @@ class MyApp extends StatelessWidget {
         }
         return child ?? const SizedBox.shrink();
       },
-      initialRoute: '/',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/': (context) => const ProfileScreen(),
         '/menu': (context) => const MenuScreen(),
         '/questions': (context) => const QuestionCrudScreen(),

@@ -1,12 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import '../../repositories/user_repository.dart';
 import '../../repositories/question_repository.dart';
 import '../../repositories/progress_repository.dart';
 import '../../models/user.dart';
 import '../../models/progress.dart';
+import 'icon_selection.dart';
 
 class AddProfileForm extends StatefulWidget {
   const AddProfileForm({super.key});
@@ -58,9 +58,27 @@ class _AddProfileFormState extends State<AddProfileForm> {
               ),
               if (_avatarPath != null && _avatarPath!.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                Text(
-                  _avatarPath!.split(Platform.pathSeparator).last,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 64,
+                        height: 64,
+                        child: _avatarPath!.startsWith('assets/')
+                            ? Image.asset(_avatarPath!, fit: BoxFit.cover)
+                            : Image.file(File(_avatarPath!), fit: BoxFit.cover),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _avatarPath!.split('/').last,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ],
@@ -99,8 +117,16 @@ class _AddProfileFormState extends State<AddProfileForm> {
     bool creationFailed = false;
 
     try {
-      // check duplicate name (case-insensitive)
+      // check duplicate name (case-insensitive) and limit
       final users = await userRepo.getAll();
+      if (users.length >= 35) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile limit reached (35)')),
+        );
+        setState(() => _saving = false);
+        return;
+      }
       final exists = users.any(
         (u) => u.name.toLowerCase() == _name.toLowerCase(),
       );
@@ -168,15 +194,12 @@ class _AddProfileFormState extends State<AddProfileForm> {
   }
 
   Future<void> _pickProfilePicture() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
+    final selected = await showDialog<String?>(
+      context: context,
+      builder: (c) => const IconSelection(),
     );
-    if (result != null && result.files.isNotEmpty) {
-      final path = result.files.single.path;
-      if (path != null) {
-        setState(() => _avatarPath = path);
-      }
+    if (selected != null && selected.isNotEmpty) {
+      setState(() => _avatarPath = selected);
     }
   }
 

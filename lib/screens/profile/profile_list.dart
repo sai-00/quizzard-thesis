@@ -8,7 +8,8 @@ typedef OnProfileTap = void Function(User user);
 class ProfileList extends StatefulWidget {
   final OnProfileTap? onTap;
   final VoidCallback? onAdd;
-  const ProfileList({super.key, this.onTap, this.onAdd});
+  final ValueChanged<int>? onCountChanged;
+  const ProfileList({super.key, this.onTap, this.onAdd, this.onCountChanged});
 
   @override
   // return the public state type
@@ -19,6 +20,10 @@ class ProfileList extends StatefulWidget {
 class ProfileListState extends State<ProfileList> {
   final repo = UserRepository();
   late Future<List<User>> _future;
+  List<User>? _latestUsers;
+
+  /// Synchronous access to current profile count (frontend only)
+  int get profileCount => _latestUsers?.length ?? 0;
 
   @override
   void initState() {
@@ -69,6 +74,11 @@ class ProfileListState extends State<ProfileList> {
           );
         }
         final users = snap.data ?? [];
+        _latestUsers = users;
+        // notify parent of current count
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          widget.onCountChanged?.call(users.length);
+        });
         // Always show an inline "Add Profile" tile as the last item.
         final total = users.length + 1;
 
@@ -87,37 +97,49 @@ class ProfileListState extends State<ProfileList> {
               itemCount: total,
               itemBuilder: (context, i) {
                 if (i == users.length) {
-                  // Add tile
+                  // Add tile; disable when max reached
+                  final bool limitReached = users.length >= 35;
                   return InkWell(
-                    onTap: widget.onAdd,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey.shade400),
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.add,
-                              size: 48,
-                              color: Colors.black54,
+                    onTap: limitReached ? null : widget.onAdd,
+                    child: Opacity(
+                      opacity: limitReached ? 0.5 : 1.0,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              color: limitReached
+                                  ? Colors.grey[300]
+                                  : const Color.fromARGB(255, 118, 70, 190),
+                              borderRadius: BorderRadius.circular(120),
+                              border: Border.all(
+                                color: limitReached
+                                    ? Colors.grey
+                                    : const Color.fromARGB(255, 255, 255, 255),
+                              ),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.add,
+                                size: 48,
+                                color: limitReached
+                                    ? Colors.grey
+                                    : const Color.fromARGB(137, 255, 255, 255),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Add Profile',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 8),
+                          Text(
+                            limitReached ? 'Limit reached' : 'Add Profile',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 }
@@ -127,6 +149,7 @@ class ProfileListState extends State<ProfileList> {
                   user: user,
                   onTap: widget.onTap,
                   onDeleted: _onDeleted,
+                  onEdited: _onDeleted,
                 );
               },
             ),
