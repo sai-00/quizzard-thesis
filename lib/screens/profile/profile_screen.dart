@@ -14,6 +14,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // use the now-public state type
   final GlobalKey<ProfileListState> _listKey = GlobalKey<ProfileListState>();
+  int _profileCount = 0;
 
   void _onProfileSelected(User user) {
     Navigator.of(
@@ -48,7 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Profile'),
+        title: Text('Select Profile – $_profileCount Profiles'),
         actions: [
           IconButton(onPressed: _openMenu, icon: const Icon(Icons.menu)),
         ],
@@ -57,6 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         key: _listKey,
         onTap: _onProfileSelected,
         onAdd: _openAddProfileForm,
+        onCountChanged: (count) => setState(() => _profileCount = count),
       ),
     );
   }

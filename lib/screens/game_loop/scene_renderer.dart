@@ -94,6 +94,7 @@ class SceneRendererState extends State<SceneRenderer> {
     String raw = '';
     final customFile = File(customPath);
     var loadedFromCustom = false;
+    var customSuppressStock = false;
     final assetPath = 'assets/art/scenes/${widget.subject.name}/$filename';
 
     if (await customFile.exists()) {
@@ -155,6 +156,14 @@ class SceneRendererState extends State<SceneRenderer> {
         debugPrint('SceneRenderer: failed to read custom CSV: $e');
         loadedFromCustom = false;
         raw = '';
+      }
+
+      // detect special marker to suppress bundled fallback
+      if (loadedFromCustom && raw.toLowerCase().contains('suppress_stock')) {
+        customSuppressStock = true;
+        debugPrint(
+          'SceneRenderer: custom CSV contains SUPPRESS_STOCK marker; will suppress bundled fallback',
+        );
       }
     }
 
@@ -307,8 +316,16 @@ class SceneRendererState extends State<SceneRenderer> {
 
     // If we loaded a custom CSV but it yielded no lines for this
     // level/placement, attempt to fall back to the bundled asset so
-    // stock cutscenes still play.
-    if (loadedFromCustom && lines.isEmpty) {
+    // stock cutscenes still play, unless the CSV contains the
+    // SUPPRESS_STOCK marker which intentionally disables stock cutscenes.
+    if (loadedFromCustom && lines.isEmpty && !customSuppressStock) {
+    } else if (loadedFromCustom && lines.isEmpty && customSuppressStock) {
+      debugPrint(
+        'SceneRenderer: suppressing bundled fallback due to SUPPRESS_STOCK marker',
+      );
+    }
+
+    if (loadedFromCustom && lines.isEmpty && !customSuppressStock) {
       debugPrint(
         'SceneRenderer: custom CSV present but had no lines for level ${widget.level} / placement ${widget.placement}. Falling back to asset $assetPath',
       );

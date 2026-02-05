@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../repositories/progress_repository.dart';
+import '../../repositories/game_repository.dart';
 import '../game_loop/game_view.dart';
 
 class LevelsScreen extends StatefulWidget {
@@ -23,6 +24,10 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
   final _progressRepo = ProgressRepository();
   late Future<void> _future;
   int _maxCompletedLevel = 0; // highest completed level (1..5), 0 = none
+  Map<int, int> _bestPoints =
+      {}; // best points per level for this subj/difficulty
+  Map<int, int> _questionCounts =
+      {}; // number of questions available per level (may be < defaults)
 
   @override
   void initState() {
@@ -34,19 +39,50 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
     // load progress for this profile/subj/difficulty and compute completed levels
     final all = await _progressRepo.getByProfile(widget.profileId);
     final completedLevels = <int>{};
+    _bestPoints = {};
+    _questionCounts = {};
+
     for (final p in all) {
       if (p.subjID == widget.subjID &&
           p.difficulty == widget.difficulty &&
-          p.progressLevel == 'completed' &&
           (p.level != null)) {
-        completedLevels.add(p.level!);
+        final lvl = p.level!;
+        if (p.progressLevel == 'completed') {
+          completedLevels.add(lvl);
+          final pts = p.points;
+          final prev = _bestPoints[lvl] ?? 0;
+          if (pts > prev) {
+            _bestPoints[lvl] = pts;
+          }
+        }
       }
     }
+
+    // determine how many questions each level actually has (may be less than defaults)
+    final gameRepo = GameRepository();
+    final levelsToQuery = [1, 2, 3, 4, 5, 99];
+    for (final lvl in levelsToQuery) {
+      try {
+        final q = await gameRepo.loadQuestions(
+          subjID: widget.subjID,
+          difficulty: widget.difficulty,
+          level: lvl,
+          isBoss: lvl == 99,
+        );
+        _questionCounts[lvl] = q.length;
+      } catch (e) {
+        // fallback to defaults if something goes wrong
+        _questionCounts[lvl] = lvl == 99 ? 10 : 5;
+      }
+    }
+
     if (completedLevels.isNotEmpty) {
       _maxCompletedLevel = completedLevels.reduce((a, b) => a > b ? a : b);
     } else {
       _maxCompletedLevel = 0;
     }
+
+    if (mounted) setState(() {});
   }
 
   bool _isLevelUnlocked(int level) {
@@ -58,6 +94,32 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
       return _maxCompletedLevel >= 5;
     }
     return _maxCompletedLevel >= (level - 1);
+  }
+
+  /// Compute star rating for a level based on best points recorded.
+  /// Normal levels: 5 questions; boss: 10 questions.
+  int _starsForLevel(int level) {
+    final pts = _bestPoints[level] ?? 0;
+    final total = _questionCounts[level] ?? (level == 99 ? 10 : 5);
+    if (total <= 0 || pts <= 0) return 0;
+
+    if (level == 99) {
+      final one = (total * 0.7).ceil(); // ~70%
+      final two = (total * 0.8).ceil(); // ~80%
+      final three = total; // perfect
+      if (pts >= three) return 3;
+      if (pts >= two) return 2;
+      if (pts >= one) return 1;
+      return 0;
+    } else {
+      final one = (total * 3 / 5).ceil(); // 60%
+      final two = (total * 4 / 5).ceil(); // 80%
+      final three = total; // perfect
+      if (pts >= three) return 3;
+      if (pts >= two) return 2;
+      if (pts >= one) return 1;
+      return 0;
+    }
   }
 
   @override
@@ -118,25 +180,62 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
                           horizontal: 18.0,
                           vertical: 20.0,
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Level $lvl',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: unlocked ? Colors.white : Colors.white70,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Level $lvl',
+                                    textAlign: TextAlign.left,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: unlocked
+                                          ? Colors.white
+                                          : Colors.white70,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    unlocked ? 'Unlocked' : 'Locked',
+                                    textAlign: TextAlign.left,
+                                    style: TextStyle(
+                                      color: unlocked
+                                          ? Colors.white
+                                          : Colors.white70,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              unlocked ? 'Unlocked' : 'Locked',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: unlocked ? Colors.white : Colors.white70,
-                              ),
+                            const SizedBox(width: 12),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: List.generate(3, (i) {
+                                final stars = _starsForLevel(lvl);
+                                final filledColor = unlocked
+                                    ? Colors.amber
+                                    : Colors.white70;
+                                final hsl = HSLColor.fromColor(color);
+                                final emptyColor = hsl
+                                    .withLightness(
+                                      (hsl.lightness - 0.18).clamp(0.0, 1.0),
+                                    )
+                                    .toColor();
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4.0,
+                                  ),
+                                  child: Icon(
+                                    Icons.star,
+                                    color: i < stars ? filledColor : emptyColor,
+                                    size: 35,
+                                  ),
+                                );
+                              }),
                             ),
                           ],
                         ),
@@ -187,31 +286,70 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
                             horizontal: 18.0,
                             vertical: 20.0,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Final Boss',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: bossUnlocked
-                                      ? Colors.white
-                                      : Colors.white70,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Final Level',
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: bossUnlocked
+                                            ? Colors.white
+                                            : Colors.white70,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      bossUnlocked
+                                          ? 'Unlocked'
+                                          : 'Locked (complete level 5 to unlock)',
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(
+                                        color: bossUnlocked
+                                            ? Colors.white
+                                            : Colors.white70,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                bossUnlocked
-                                    ? 'Unlocked'
-                                    : 'Locked (complete level 5 to unlock)',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: bossUnlocked
-                                      ? Colors.white
-                                      : Colors.white70,
-                                ),
+                              const SizedBox(width: 12),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: List.generate(3, (i) {
+                                  final stars = _starsForLevel(99);
+                                  final filledColor = bossUnlocked
+                                      ? Colors.amber
+                                      : Colors.white70;
+                                  final hsl = HSLColor.fromColor(
+                                    bossUnlocked
+                                        ? Colors.red
+                                        : Colors.grey.shade700,
+                                  );
+                                  final emptyColor = hsl
+                                      .withLightness(
+                                        (hsl.lightness - 0.18).clamp(0.0, 1.0),
+                                      )
+                                      .toColor();
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4.0,
+                                    ),
+                                    child: Icon(
+                                      Icons.star,
+                                      color: i < stars
+                                          ? filledColor
+                                          : emptyColor,
+                                      size: 35,
+                                    ),
+                                  );
+                                }),
                               ),
                             ],
                           ),

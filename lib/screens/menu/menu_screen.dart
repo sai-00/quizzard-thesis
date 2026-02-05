@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quizzard_thesis/screens/menu/custom_config.dart';
 import '../subject/subject_list.dart';
 import '../progress/progress_tracker_list.dart';
 
@@ -69,6 +70,13 @@ class MenuScreen extends StatelessWidget {
             leading: const Icon(Icons.question_answer),
             title: const Text('Manage Questions'),
             onTap: () => Navigator.of(context).pushNamed('/questions'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Custom Configurations'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CustomConfigScreen()),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.settings_backup_restore),

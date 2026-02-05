@@ -3,7 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'icon_selection.dart';
 import '../../repositories/user_repository.dart';
 import '../../models/user.dart';
 
@@ -93,11 +93,26 @@ class _EditProfileFormState extends State<EditProfileForm> {
                     ),
                     if (_avatarPath != null && _avatarPath!.isNotEmpty) ...[
                       const SizedBox(height: 8),
-                      Text(
-                        _avatarPath!.split(Platform.pathSeparator).last,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
+                      Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 64,
+                              height: 64,
+                              child: _avatarPath!.startsWith('assets/')
+                                  ? Image.asset(_avatarPath!, fit: BoxFit.cover)
+                                  : Image.file(File(_avatarPath!), fit: BoxFit.cover),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _avatarPath!.split('/').last,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -119,13 +134,12 @@ class _EditProfileFormState extends State<EditProfileForm> {
   }
 
   Future<void> _pickProfilePicture() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
+    final selected = await showDialog<String?>(
+      context: context,
+      builder: (c) => const IconSelection(),
     );
-    if (result != null && result.files.isNotEmpty) {
-      final path = result.files.single.path;
-      if (path != null) setState(() => _avatarPath = path);
+    if (selected != null && selected.isNotEmpty) {
+      setState(() => _avatarPath = selected);
     }
   }
 
