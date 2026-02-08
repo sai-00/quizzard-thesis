@@ -52,7 +52,10 @@ class GameMenu extends StatelessWidget {
                     // Resume: simply close the dialog
                     Navigator.of(context).pop();
                   },
-                  child: const Text('Resume', style: TextStyle(fontSize: 18, color: Colors.white)),
+                  child: const Text(
+                    'Resume',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -70,7 +73,10 @@ class GameMenu extends StatelessWidget {
                     // Quit to levels/menu: pop until first route
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
-                  child: const Text('Quit', style: TextStyle(fontSize: 18, color: Colors.white)),
+                  child: const Text(
+                    'Quit',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),

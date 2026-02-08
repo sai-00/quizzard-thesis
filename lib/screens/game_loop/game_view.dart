@@ -36,7 +36,8 @@ class _GameViewState extends State<GameView> {
   SpriteFrame? frame;
   double spriteYOffset = 0.0;
 
-  final GlobalKey<SceneRendererState> _sceneKey = GlobalKey();
+  final GlobalKey<SceneRendererState> _sceneKeyBeginning = GlobalKey();
+  final GlobalKey<SceneRendererState> _sceneKeyEnd = GlobalKey();
   bool _csvBeginningFinished = false;
   bool _showingCsvEnd = false;
   bool _csvEndRequested = false;
@@ -72,6 +73,10 @@ class _GameViewState extends State<GameView> {
         _showingCsvEnd = false;
       }
 
+      debugPrint(
+        '[GameView] onUpdate: phase=${controller.phase} showingExplanation=${controller.showingExplanation} lastAnswer=${controller.lastAnswerResult} _csvEndRequested=$_csvEndRequested _showingCsvEnd=$_showingCsvEnd',
+      );
+
       setState(() {});
       _updateSpriteForState();
     };
@@ -85,14 +90,29 @@ class _GameViewState extends State<GameView> {
     });
   }
 
-  // new helper
-  void _csvRendererNext() {
-    _sceneKey.currentState?.nextLine();
+  // new helper: target the appropriate SceneRenderer by placement
+  void _csvRendererNext(ScenePlacement placement) {
+    debugPrint('[GameView] csvRendererNext: placement=$placement');
+    if (placement == ScenePlacement.beginning) {
+      _sceneKeyBeginning.currentState?.nextLine();
+    } else {
+      _sceneKeyEnd.currentState?.nextLine();
+    }
   }
 
-  bool _csvHasLines() => _sceneKey.currentState?.hasLines ?? false;
+  bool _csvHasLines(ScenePlacement placement) {
+    final has =
+        (placement == ScenePlacement.beginning
+                ? _sceneKeyBeginning.currentState
+                : _sceneKeyEnd.currentState)
+            ?.hasLines ??
+        false;
+    debugPrint('[GameView] csvHasLines: placement=$placement has=$has');
+    return has;
+  }
 
   void _updateSprite(SpriteFrame? newFrame) {
+    debugPrint('[GameView] updateSprite: newFrame=${newFrame?.spriteAsset}');
     setState(() {
       frame = newFrame;
       spriteYOffset = -20;
@@ -107,8 +127,14 @@ class _GameViewState extends State<GameView> {
   }
 
   void _updateSpriteForState() {
+    // Avoid changing the sprite while the CSV end is being requested or shown
     if (controller.phase == GamePhase.cutsceneStart ||
-        controller.phase == GamePhase.cutsceneEnd) {
+        controller.phase == GamePhase.cutsceneEnd ||
+        (controller.phase == GamePhase.completed &&
+            (_csvEndRequested || _showingCsvEnd))) {
+      debugPrint(
+        '[GameView] updateSpriteForState: skipping due to phase=${controller.phase} csvRequested=$_csvEndRequested showingCsv=$_showingCsvEnd',
+      );
       return;
     }
 
@@ -119,6 +145,7 @@ class _GameViewState extends State<GameView> {
             : spriteManager.wrongAnswerFrame(),
       );
     } else {
+      debugPrint('[GameView] updateSpriteForState: showing neutral talking');
       spriteManager.showNeutralTalking(_updateSprite);
     }
   }
@@ -264,13 +291,13 @@ class _GameViewState extends State<GameView> {
           // the view cutscene shows immediately.
           setState(() => _csvBeginningFinished = true);
         },
-        onNext: _csvRendererNext,
+        onNext: () => _csvRendererNext(placement),
         onLoaded: (hasLines) {
           // beginning placement: if there are no lines, mark finished
           if (!hasLines) setState(() => _csvBeginningFinished = true);
         },
         textBoxColor: _subjectColor(widget.subject),
-        key: _sceneKey,
+        key: _sceneKeyBeginning,
       );
     }
 
@@ -287,7 +314,7 @@ class _GameViewState extends State<GameView> {
         // beneath becomes interactive (Next Level / Quit buttons).
         setState(() => _showingCsvEnd = false);
       },
-      onNext: _csvRendererNext,
+      onNext: () => _csvRendererNext(placement),
       onNoLines: () {
         // If no CSV lines at end, just hide overlay immediately
         setState(() => _showingCsvEnd = false);
@@ -304,7 +331,7 @@ class _GameViewState extends State<GameView> {
         }
       },
       textBoxColor: _subjectColor(widget.subject),
-      key: _sceneKey,
+      key: _sceneKeyEnd,
     );
   }
 
@@ -438,7 +465,7 @@ class _GameViewState extends State<GameView> {
                           onPressed: _retryLevel,
                           child: const Text(
                             'Retry Level',
-                            style: TextStyle(fontSize: 18),
+                            style: TextStyle(fontSize: 18, color: Colors.white),
                           ),
                         ),
                       ),
@@ -455,7 +482,7 @@ class _GameViewState extends State<GameView> {
                           onPressed: () => Navigator.of(context).pop(),
                           child: const Text(
                             'Quit',
-                            style: TextStyle(fontSize: 18),
+                            style: TextStyle(fontSize: 18, color: Colors.white),
                           ),
                         ),
                       ),
@@ -477,8 +504,8 @@ class _GameViewState extends State<GameView> {
                           // If CSV beginning hasn't finished yet, advance it if possible,
                           // otherwise mark it finished so the view cutscene shows.
                           if (!_csvBeginningFinished) {
-                            if (_csvHasLines()) {
-                              _csvRendererNext();
+                            if (_csvHasLines(ScenePlacement.beginning)) {
+                              _csvRendererNext(ScenePlacement.beginning);
                             } else {
                               setState(() => _csvBeginningFinished = true);
                             }
@@ -492,15 +519,15 @@ class _GameViewState extends State<GameView> {
                           // If we're not yet showing the CSV end, start it when Continue
                           // is pressed and CSV lines exist; otherwise finish.
                           if (!_showingCsvEnd) {
-                            if (_csvHasLines()) {
+                            if (_csvHasLines(ScenePlacement.end)) {
                               setState(() => _showingCsvEnd = true);
                             } else {
                               controller.finishCutscene();
                             }
                           } else {
                             // If CSV end is being shown, advance it.
-                            if (_csvHasLines()) {
-                              _csvRendererNext();
+                            if (_csvHasLines(ScenePlacement.end)) {
+                              _csvRendererNext(ScenePlacement.end);
                             } else {
                               controller.finishCutscene();
                             }
@@ -609,7 +636,7 @@ class _GameViewState extends State<GameView> {
                     onPressed: _playNextLevel,
                     child: const Text(
                       'Next Level',
-                      style: TextStyle(fontSize: 18),
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
                 ),
@@ -624,7 +651,10 @@ class _GameViewState extends State<GameView> {
                       ),
                     ),
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Quit', style: TextStyle(fontSize: 18)),
+                    child: const Text(
+                      'Quit',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
                   ),
                 ),
               ],
@@ -780,63 +810,67 @@ class _GameViewState extends State<GameView> {
                     ),
                   )
                 : GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 8,
-                  childAspectRatio: 1.6,
-                  padding: EdgeInsets.zero,
-                  children: List.generate(4, (i) {
-                    final choiceColors = <Color>[
-                      const Color.fromARGB(255, 39, 87, 140), // blue
-                      const Color.fromARGB(255, 83, 30, 26),  // red
-                      const Color.fromARGB(255, 60, 179, 113), // green
-                      const Color.fromARGB(255, 181, 113, 18), // orange
-                    ];
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 1.6,
+                    padding: EdgeInsets.zero,
+                    children: List.generate(4, (i) {
+                      final choiceColors = <Color>[
+                        const Color.fromARGB(255, 39, 87, 140), // blue
+                        const Color.fromARGB(255, 83, 30, 26), // red
+                        const Color.fromARGB(255, 60, 179, 113), // green
+                        const Color.fromARGB(255, 181, 113, 18), // orange
+                      ];
 
-                    final baseColor = choiceColors[i];
+                      final baseColor = choiceColors[i];
 
-                    return ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-                          if (states.contains(MaterialState.disabled)) {
-                            return baseColor.withOpacity(0.5);
-                          }
-                          if (states.contains(MaterialState.pressed)) {
-                            return HSLColor.fromColor(baseColor)
-                                .withLightness(0.45)
-                                .toColor();
-                          }
-                          return baseColor;
-                        }),
-                        elevation: MaterialStateProperty.resolveWith<double>(
-                          (states) => states.contains(MaterialState.pressed) ? 2 : 4,
-                        ),
-                        shape: MaterialStateProperty.all(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      return ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.resolveWith<Color>((
+                                states,
+                              ) {
+                                if (states.contains(MaterialState.disabled)) {
+                                  return baseColor.withOpacity(0.5);
+                                }
+                                if (states.contains(MaterialState.pressed)) {
+                                  return HSLColor.fromColor(
+                                    baseColor,
+                                  ).withLightness(0.45).toColor();
+                                }
+                                return baseColor;
+                              }),
+                          elevation: MaterialStateProperty.resolveWith<double>(
+                            (states) =>
+                                states.contains(MaterialState.pressed) ? 2 : 4,
+                          ),
+                          shape: MaterialStateProperty.all(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
-                      ),
-                  onPressed: () => controller.submitAnswer(i),
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        q.choices[i],
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                        onPressed: () => controller.submitAnswer(i),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              q.choices[i],
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                   ),
-                );
-              }),
-            ),
           ),
         ),
       ],

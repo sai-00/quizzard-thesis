@@ -575,7 +575,10 @@ class SceneRendererState extends State<SceneRenderer> {
                     _next();
                   }
                 },
-                child: const Text('Continue', style: TextStyle(fontSize: 18, color: Colors.white)),
+                child: const Text(
+                  'Continue',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
             ),
           ),
