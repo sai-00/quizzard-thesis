@@ -562,7 +562,7 @@ class SceneRendererState extends State<SceneRenderer> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: const Color.fromARGB(255, 72, 39, 102),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -575,7 +575,7 @@ class SceneRendererState extends State<SceneRenderer> {
                     _next();
                   }
                 },
-                child: const Text('Continue', style: TextStyle(fontSize: 18)),
+                child: const Text('Continue', style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
             ),
           ),

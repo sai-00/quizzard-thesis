@@ -375,7 +375,7 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
         return const Color.fromARGB(255, 37, 13, 53);
       case 'science':
       case 'sci':
-        return const Color.fromARGB(255, 46, 10, 10);
+        return const Color.fromARGB(255, 66, 12, 12);
       default:
         return Colors.grey.shade800;
     }

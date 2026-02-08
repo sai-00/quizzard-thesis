@@ -465,7 +465,7 @@ class _GameViewState extends State<GameView> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
+                        backgroundColor: const Color.fromARGB(255, 72, 39, 102),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -512,7 +512,7 @@ class _GameViewState extends State<GameView> {
                       },
                       child: const Text(
                         'Continue',
-                        style: TextStyle(fontSize: 18),
+                        style: TextStyle(fontSize: 18, color: Colors.white),
                       ),
                     ),
                   ),
@@ -600,7 +600,7 @@ class _GameViewState extends State<GameView> {
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: const Color.fromARGB(255, 72, 39, 102),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -725,7 +725,7 @@ class _GameViewState extends State<GameView> {
             padding: EdgeInsets.only(
               bottom: controller.showingExplanation
                   ? 100
-                  : 300, // float above buttons or above choices
+                  : 270, // float above buttons or above choices
             ),
             child: Container(
               width: MediaQuery.of(context).size.width * 0.9,
@@ -779,39 +779,64 @@ class _GameViewState extends State<GameView> {
                       ),
                     ),
                   )
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(q.choices.length, (i) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6.0),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromARGB(
-                                255,
-                                25,
-                                25,
-                                26,
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () => controller.submitAnswer(i),
-                            child: Text(
-                              q.choices[i],
-                              style: const TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
+                : GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 1.6,
+                  padding: EdgeInsets.zero,
+                  children: List.generate(4, (i) {
+                    final choiceColors = <Color>[
+                      const Color.fromARGB(255, 39, 87, 140), // blue
+                      const Color.fromARGB(255, 83, 30, 26),  // red
+                      const Color.fromARGB(255, 60, 179, 113), // green
+                      const Color.fromARGB(255, 181, 113, 18), // orange
+                    ];
+
+                    final baseColor = choiceColors[i];
+
+                    return ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                          if (states.contains(MaterialState.disabled)) {
+                            return baseColor.withOpacity(0.5);
+                          }
+                          if (states.contains(MaterialState.pressed)) {
+                            return HSLColor.fromColor(baseColor)
+                                .withLightness(0.45)
+                                .toColor();
+                          }
+                          return baseColor;
+                        }),
+                        elevation: MaterialStateProperty.resolveWith<double>(
+                          (states) => states.contains(MaterialState.pressed) ? 2 : 4,
+                        ),
+                        shape: MaterialStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                      );
-                    }),
+                      ),
+                  onPressed: () => controller.submitAnswer(i),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        q.choices[i],
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
+                );
+              }),
+            ),
           ),
         ),
       ],
@@ -826,7 +851,7 @@ class _GameViewState extends State<GameView> {
       case 'reading':
         return const Color.fromARGB(255, 43, 27, 54);
       case 'science':
-        return const Color.fromARGB(255, 46, 21, 21);
+        return const Color.fromARGB(255, 66, 12, 12);
       default:
         return Colors.black87;
     }

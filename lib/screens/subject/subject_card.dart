@@ -115,7 +115,7 @@ class SubjectCard extends StatelessWidget {
         return const Color.fromARGB(255, 37, 13, 53);
       case 'science':
       case 'sci':
-        return const Color.fromARGB(255, 46, 10, 10);
+        return const Color.fromARGB(255, 66, 12, 12);
       default:
         return Colors.black87;
     }

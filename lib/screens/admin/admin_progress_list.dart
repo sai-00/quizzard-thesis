@@ -115,8 +115,9 @@ class _AdminProgressListState extends State<AdminProgressList> {
         }
 
         final cards = snap.data ?? [];
-        if (cards.isEmpty)
+        if (cards.isEmpty) {
           return const Center(child: Text('No learner progress found'));
+        }
 
         return RefreshIndicator(
           onRefresh: _refresh,
