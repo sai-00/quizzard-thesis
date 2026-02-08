@@ -13,6 +13,11 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen> {
   int _index = 0; // 0 = progress, 1 = settings
 
+  void _logout() {
+    // remove everything and go back to profile selection
+    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget body = _index == 0
@@ -20,7 +25,12 @@ class _AdminScreenState extends State<AdminScreen> {
         : MenuScreen(adminProfileId: widget.profileId);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin')),
+      appBar: AppBar(
+        title: const Text('Admin'),
+        actions: [
+          IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
+        ],
+      ),
       body: body,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
