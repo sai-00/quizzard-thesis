@@ -6,7 +6,9 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE userProfile (
     profileID INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    avatar TEXT
+    avatar TEXT,
+    isAdmin INTEGER DEFAULT 0,
+    adminPasscode TEXT
 );
 
 -- ======================

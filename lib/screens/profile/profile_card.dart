@@ -107,7 +107,7 @@ class ProfileCard extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.edit, size: 20),
-                onPressed: user.profileID == null
+                onPressed: (user.profileID == null || user.isAdmin == true)
                     ? null
                     : () async {
                         final edited = await showDialog<bool>(
@@ -128,36 +128,38 @@ class ProfileCard extends StatelessWidget {
               const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.delete, size: 20),
-                onPressed: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (c) => AlertDialog(
-                      title: const Text('Delete profile'),
-                      content: Text(
-                        'Delete profile "${user.name}"? This cannot be undone.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(c).pop(false),
-                          child: const Text('Cancel'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () => Navigator.of(c).pop(true),
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirmed == true) {
-                    await UserRepository().delete(user.profileID!);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Profile deleted')),
-                      );
-                    }
-                    onDeleted?.call();
-                  }
-                },
+                onPressed: (user.isAdmin == true)
+                    ? null
+                    : () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (c) => AlertDialog(
+                            title: const Text('Delete profile'),
+                            content: Text(
+                              'Delete profile "${user.name}"? This cannot be undone.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(c).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.of(c).pop(true),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          await UserRepository().delete(user.profileID!);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Profile deleted')),
+                            );
+                          }
+                          onDeleted?.call();
+                        }
+                      },
               ),
             ],
           ),
