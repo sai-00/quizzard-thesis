@@ -132,6 +132,27 @@ flutter:
     - assets/icons/MANGO.png
     - assets/icons/STRAWBERRY.png
     - assets/icons/WATERMELON.png
+    - assets/icons/BIRD.png
+    - assets/icons/CAT.png
+    - assets/icons/DOG.png
+    - assets/icons/CHICK.png
+    - assets/icons/COW.png
+    - assets/icons/ELEPHANT.png
+    - assets/icons/BLACKRANGER.png
+    - assets/icons/BLUERANGER.png
+    - assets/icons/REDRANGER.png
+    - assets/icons/ORANGERANGER.png
+    - assets/icons/PINKRANGER.png
+    - assets/icons/PURPLERANGER.png
+    - assets/icons/WHITERANGER.png
+    - assets/icons/GREENRANGER.png
+    - assets/icons/POLICE.png
+    - assets/icons/ELEPHANT.png
+    - assets/icons/HORSE.png
+    - assets/icons/JELLYFISH.png
+    - assets/icons/LION.png
+    - assets/icons/MONKEY.png
+    - assets/icons/NINJA.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

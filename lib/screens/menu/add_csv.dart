@@ -3,7 +3,6 @@ import 'package:file_picker/file_picker.dart';
 
 import '../../services/csv_sync_service.dart';
 
-// Simple CSV paste/import UI to avoid requiring file_picker package.
 class AddCsvScreen extends StatelessWidget {
   const AddCsvScreen({super.key});
 
@@ -29,7 +28,9 @@ class AddCsvScreen extends StatelessWidget {
         return;
       }
 
-      await service.importCsvFile(path);
+      // Normalize file first (handles Excel exports and encodings) and import from string
+      final normalized = await normalizeCsvFile(path);
+      await service.importCsvString(normalized);
 
       if (context.mounted) {
         ScaffoldMessenger.of(

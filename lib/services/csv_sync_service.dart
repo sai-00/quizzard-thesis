@@ -1,9 +1,98 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart'; // for debugPrint
 import '../models/question.dart';
 import '../repositories/question_repository.dart';
+
+/// Normalize raw CSV content to mitigate Excel/encoding/platform differences.
+/// - Decodes bytes using UTF-8 (with fallback to Latin1)
+/// - Removes BOMs
+/// - Replaces curly quotes, non-breaking spaces, and common Windows-1252 leftovers
+/// - Normalizes line endings to LF
+/// - Handles Excel-exported rows where an entire row is wrapped in double-quotes
+///   and cells double-up internal quotes (""") by unwrapping and unescaping.
+String normalizeCsvRawFromBytes(Uint8List bytes) {
+  String raw;
+  try {
+    raw = utf8.decode(bytes);
+  } on FormatException {
+    // try removing UTF-8 BOM if present
+    if (bytes.length >= 3 &&
+        bytes[0] == 0xEF &&
+        bytes[1] == 0xBB &&
+        bytes[2] == 0xBF) {
+      raw = utf8.decode(bytes.sublist(3));
+    } else {
+      // fallback to latin1 which will preserve bytes rather than throwing
+      raw = latin1.decode(bytes);
+    }
+  }
+
+  return normalizeCsvRawFromString(raw);
+}
+
+Future<String> normalizeCsvFile(String path) async {
+  final bytes = await File(path).readAsBytes();
+  return normalizeCsvRawFromBytes(bytes);
+}
+
+String normalizeCsvRawFromString(String raw) {
+  // remove BOM and normalize common problematic characters using codepoints
+  raw = raw.replaceAll(String.fromCharCode(0xFEFF), '');
+  raw = raw.replaceAll(String.fromCharCode(0x00A0), ' ');
+  raw = raw.replaceAll(String.fromCharCode(0x2018), "'");
+  raw = raw.replaceAll(String.fromCharCode(0x2019), "'");
+  raw = raw.replaceAll(String.fromCharCode(0x201B), "'");
+  raw = raw.replaceAll(String.fromCharCode(0x02BC), "'");
+  raw = raw.replaceAll(String.fromCharCode(0x2032), "'");
+  raw = raw.replaceAll(String.fromCharCode(0x201C), '"');
+  raw = raw.replaceAll(String.fromCharCode(0x201D), '"');
+  raw = raw.replaceAll(String.fromCharCode(0x2017), "'");
+  raw = raw.replaceAll(String.fromCharCode(0xFFFD), "'");
+  raw = raw.replaceAll(String.fromCharCode(0x0091), "'");
+  raw = raw.replaceAll(String.fromCharCode(0x0092), "'");
+  raw = raw.replaceAll(String.fromCharCode(0x0093), '"');
+  raw = raw.replaceAll(String.fromCharCode(0x0094), '"');
+  raw = raw.replaceAll(String.fromCharCode(0x0096), '-');
+  raw = raw.replaceAll(String.fromCharCode(0x0097), '-');
+
+  // Normalize line endings to unix-style
+  raw = raw.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+  // Process lines: detect Excel-exported rows like:
+  //  "col1","col2 with ""quotes""","col3"
+  // or rows that are entirely wrapped in an extra pair of quotes.
+  final lines = raw.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    if (line.isEmpty) continue;
+
+    // If a line appears to be a row-wrapped export (starts & ends with quote and
+    // contains the quoted-field separator '","'), unwrap and unescape.
+    if (line.length >= 2 &&
+        line.startsWith('"') &&
+        line.endsWith('"') &&
+        line.contains('","')) {
+      line = line.substring(1, line.length - 1);
+      // Unescape doubled quotes inside fields
+      line = line.replaceAll('""', '"');
+      // Replace the quoted-field separators with plain commas so the lightweight parser sees separators
+      line = line.replaceAll('","', ',');
+      lines[i] = line;
+      continue;
+    }
+
+    // In other cases, still collapse doubled double-quotes which Excel uses to escape
+    // internal quotes inside a quoted field.
+    if (line.contains('""')) {
+      lines[i] = line.replaceAll('""', '"');
+    }
+  }
+
+  return lines.join('\n');
+}
 
 class CsvSyncService {
   final QuestionRepository _questionRepo = QuestionRepository();
@@ -61,6 +150,9 @@ class CsvSyncService {
     String csvContent, {
     int defaultSubjID = 1,
   }) async {
+    // Ensure content normalized (handles BOMs, Excel quoting, weird quotes)
+    csvContent = normalizeCsvRawFromString(csvContent);
+
     if (csvContent.trim().isEmpty) {
       debugPrint('CSV import aborted: file is empty');
       return;
@@ -158,13 +250,15 @@ class CsvSyncService {
         return;
       }
 
-      final content = await file.readAsString();
-      if (content.trim().isEmpty) {
-        debugPrint('CSV import aborted: file is empty: $path');
+      final normalized = await normalizeCsvFile(path);
+      if (normalized.trim().isEmpty) {
+        debugPrint(
+          'CSV import aborted: file is empty after normalization: $path',
+        );
         return;
       }
 
-      await importCsvString(content, defaultSubjID: defaultSubjID);
+      await importCsvString(normalized, defaultSubjID: defaultSubjID);
     } catch (e, stack) {
       debugPrint('ERROR reading CSV file: $e');
       debugPrint(stack.toString());

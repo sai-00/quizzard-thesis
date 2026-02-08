@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../services/csv_sync_service.dart';
+import 'dart:convert';
 
 class AddCutsceneCsvScreen extends StatefulWidget {
   const AddCutsceneCsvScreen({Key? key}) : super(key: key);
@@ -34,6 +36,8 @@ class _AddCutsceneCsvScreenState extends State<AddCutsceneCsvScreen> {
       if (pickedPath == null) return;
 
       final bytes = await File(pickedPath).readAsBytes();
+      // Normalize CSV content (handles Excel quoting/encoding oddities)
+      final normalized = normalizeCsvRawFromBytes(bytes);
 
       // Save into the app documents directory under `custom/<subject>/`.
       final docDir = await getApplicationDocumentsDirectory();
@@ -46,7 +50,7 @@ class _AddCutsceneCsvScreenState extends State<AddCutsceneCsvScreen> {
       final filename =
           '${subject.toLowerCase()}_${difficulty.toLowerCase()}.csv';
       final dest = File('${dir.path}${Platform.pathSeparator}$filename');
-      await dest.writeAsBytes(bytes, flush: true);
+      await dest.writeAsString(normalized, flush: true, encoding: utf8);
 
       if (!mounted) return;
       ScaffoldMessenger.of(
