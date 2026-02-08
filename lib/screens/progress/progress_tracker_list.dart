@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../repositories/progress_repository.dart';
 import '../../repositories/question_repository.dart';
+import 'progress_tracker_card.dart';
 
 class ProgressTrackerList extends StatefulWidget {
   final int profileId;
@@ -33,25 +34,67 @@ class _ProgressTrackerListState extends State<ProgressTrackerList> {
     _subjectNames = {
       for (final s in subjects) s['subjID'] as int: s['subjName'] as String,
     };
-
     final rows = await _progressRepo.getByProfile(widget.profileId);
     // init maps
     _pointsPerSubject = {};
     _currentDifficulty = {};
 
+    // Build cumulative per-subject difficulty totals and session grouping
+    final Map<int, Map<String, int>> totals = {};
+    final Map<int, Map<String, List<Map<String, dynamic>>>> sessionsBySubj = {};
+
     for (final r in rows) {
-      _pointsPerSubject.putIfAbsent(
-        r.subjID,
-        () => {'Easy': 0, 'Medium': 0, 'Hard': 0},
-      );
+      totals.putIfAbsent(r.subjID, () => {'Easy': 0, 'Medium': 0, 'Hard': 0});
       final diff = r.difficulty ?? 'Easy';
-      _pointsPerSubject[r.subjID]![diff] =
-          (_pointsPerSubject[r.subjID]![diff] ?? 0) + (r.points);
-      // track last played difficulty as current
+      totals[r.subjID]![diff] = (totals[r.subjID]![diff] ?? 0) + r.points;
+
+      // group by runID (fallback to datePlayed)
+      final runKey =
+          r.runID ?? r.datePlayed ?? DateTime.now().toIso8601String();
+      sessionsBySubj.putIfAbsent(r.subjID, () => {});
+      sessionsBySubj[r.subjID]!.putIfAbsent(runKey, () => []);
+      sessionsBySubj[r.subjID]![runKey]!.add({
+        'datePlayed': r.datePlayed,
+        'points': r.points,
+        'runID': runKey,
+      });
+
+      // track last played difficulty as current (most recent wins because rows ordered by date desc)
       _currentDifficulty[r.subjID] =
           r.difficulty ?? _currentDifficulty[r.subjID] ?? 'Easy';
     }
+
+    // convert sessionsBySubj into list of recent sessions with summed points
+    _pointsPerSubject = totals;
+    // replace current difficulty is already set
+
+    // store a map of subjID -> List of sessions (datePlayed, points), latest first
+    final Map<int, List<Map<String, dynamic>>> recentSessions = {};
+    sessionsBySubj.forEach((subjID, runMap) {
+      final runs = <Map<String, dynamic>>[];
+      for (final entry in runMap.entries) {
+        final list = entry.value;
+        final pts = list.fold<int>(0, (p, e) => p + (e['points'] as int? ?? 0));
+        final firstDate = list.first['datePlayed'] as String?;
+        runs.add({'datePlayed': firstDate, 'points': pts, 'runID': entry.key});
+      }
+      runs.sort((a, b) {
+        final da =
+            DateTime.tryParse(a['datePlayed'] ?? '') ??
+            DateTime.fromMillisecondsSinceEpoch(0);
+        final db =
+            DateTime.tryParse(b['datePlayed'] ?? '') ??
+            DateTime.fromMillisecondsSinceEpoch(0);
+        return db.compareTo(da);
+      });
+      recentSessions[subjID] = runs;
+    });
+
+    // attach recent sessions to a field used by the UI via a temporary variable stored on the state
+    _recentSessionsStore = recentSessions;
   }
+
+  late Map<int, List<Map<String, dynamic>>> _recentSessionsStore;
 
   @override
   Widget build(BuildContext context) {
@@ -72,27 +115,11 @@ class _ProgressTrackerListState extends State<ProgressTrackerList> {
             final name = _subjectNames[sid] ?? 'Subject $sid';
             final points =
                 _pointsPerSubject[sid] ?? {'Easy': 0, 'Medium': 0, 'Hard': 0};
-            final current = _currentDifficulty[sid] ?? 'Easy';
-            return Card(
-              child: ListTile(
-                title: Text(name),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Current difficulty: $current'),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        _badge('Easy', points['Easy'] ?? 0, Colors.green),
-                        const SizedBox(width: 8),
-                        _badge('Medium', points['Medium'] ?? 0, Colors.orange),
-                        const SizedBox(width: 8),
-                        _badge('Hard', points['Hard'] ?? 0, Colors.red),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+            final sessions = _recentSessionsStore[sid] ?? [];
+            return ProgressTrackerCard(
+              subjectName: name,
+              difficultyPoints: points,
+              sessions: sessions,
             );
           },
         );
@@ -100,18 +127,5 @@ class _ProgressTrackerListState extends State<ProgressTrackerList> {
     );
   }
 
-  Widget _badge(String label, int pts, Color color) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    decoration: BoxDecoration(
-      color: color.withAlpha((0.12 * 255).round()),
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Row(
-      children: [
-        Text(label),
-        const SizedBox(width: 6),
-        Text(pts.toString(), style: TextStyle(fontWeight: FontWeight.bold)),
-      ],
-    ),
-  );
+  // badges are rendered by ProgressTrackerCard
 }

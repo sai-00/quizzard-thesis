@@ -73,7 +73,14 @@ class ProfileListState extends State<ProfileList> {
             ),
           );
         }
-        final users = snap.data ?? [];
+        final users = List<User>.from(snap.data ?? []);
+        // Ensure admin accounts appear first in the list
+        users.sort((a, b) {
+          if (a.isAdmin == b.isAdmin) {
+            return (a.profileID ?? 0).compareTo(b.profileID ?? 0);
+          }
+          return a.isAdmin == true ? -1 : 1;
+        });
         _latestUsers = users;
         // notify parent of current count
         WidgetsBinding.instance.addPostFrameCallback((_) {

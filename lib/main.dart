@@ -6,6 +6,7 @@ import 'splash_screen.dart';
 import 'home_screen.dart';
 import 'screens/menu/menu_screen.dart';
 import 'screens/questions/question_crud_screen.dart';
+import 'screens/admin/admin_screen.dart';
 
 // Add this import for desktop sqflite ffi
 // (add dependency: sqflite_common_ffi in pubspec.yaml)
@@ -81,6 +82,18 @@ class MyApp extends StatelessWidget {
           // profileId is non-null here; cast to int
           return MaterialPageRoute(
             builder: (_) => HomeScreen(profileId: profileId!),
+          );
+        }
+        if (settings.name == '/admin') {
+          final args = settings.arguments;
+          int? profileId;
+          if (args is int) {
+            profileId = args;
+          } else if (args is String) {
+            profileId = int.tryParse(args);
+          }
+          return MaterialPageRoute(
+            builder: (_) => AdminScreen(profileId: profileId),
           );
         }
         return null;

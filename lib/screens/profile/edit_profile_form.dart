@@ -22,6 +22,8 @@ class _EditProfileFormState extends State<EditProfileForm> {
   String? _avatarPath;
   bool _loading = true;
   bool _saving = false;
+  bool _isAdmin = false;
+  String? _adminPasscode;
 
   Future<void> _loadUser() async {
     final repo = UserRepository();
@@ -33,6 +35,8 @@ class _EditProfileFormState extends State<EditProfileForm> {
     if (!mounted) return;
     _nameController.text = user.name;
     _avatarPath = user.avatar;
+    _isAdmin = user.isAdmin == true;
+    _adminPasscode = user.adminPasscode;
     setState(() => _loading = false);
   }
 
@@ -155,6 +159,8 @@ class _EditProfileFormState extends State<EditProfileForm> {
       profileID: widget.profileId,
       name: _nameController.text.trim(),
       avatar: _avatarPath ?? '',
+      isAdmin: _isAdmin,
+      adminPasscode: _adminPasscode,
     );
     try {
       // check duplicate names among other users

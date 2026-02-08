@@ -38,7 +38,7 @@ class QuizzardDb {
           // fallback: create minimal required tables so app won't completely fail
           await db.execute('PRAGMA foreign_keys = ON;');
           await db.execute(
-            'CREATE TABLE IF NOT EXISTS userProfile (profileID INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, avatar TEXT);',
+            'CREATE TABLE IF NOT EXISTS userProfile (profileID INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, avatar TEXT, isAdmin INTEGER DEFAULT 0, adminPasscode TEXT);',
           );
           await db.execute(
             'CREATE TABLE IF NOT EXISTS subject (subjID INTEGER PRIMARY KEY AUTOINCREMENT, subjName TEXT NOT NULL);',
@@ -54,6 +54,7 @@ class QuizzardDb {
       onOpen: (db) async {
         // run lightweight migrations to add any new columns safely
         await _ensureGameProgressColumns(db);
+        await _ensureUserProfileColumns(db);
       },
     );
 
@@ -106,6 +107,37 @@ class QuizzardDb {
       }
     } catch (e) {
       // if table doesn't exist, do nothing (onCreate should have created it)
+    }
+  }
+
+  // Ensure `userProfile` has admin-related columns.
+  Future<void> _ensureUserProfileColumns(Database db) async {
+    try {
+      final cols = await db.rawQuery("PRAGMA table_info('userProfile')");
+      final existing = <String>{};
+      for (final c in cols) {
+        final name = (c['name'] ?? c['column'])?.toString();
+        if (name != null) existing.add(name);
+      }
+
+      final Map<String, String> needed = {
+        'isAdmin':
+            'ALTER TABLE userProfile ADD COLUMN isAdmin INTEGER DEFAULT 0;',
+        'adminPasscode':
+            'ALTER TABLE userProfile ADD COLUMN adminPasscode TEXT;',
+      };
+
+      for (final kv in needed.entries) {
+        if (!existing.contains(kv.key)) {
+          try {
+            await db.execute(kv.value);
+          } catch (e) {
+            // ignore individual failures
+          }
+        }
+      }
+    } catch (e) {
+      // ignore: the table may not yet exist
     }
   }
 }
