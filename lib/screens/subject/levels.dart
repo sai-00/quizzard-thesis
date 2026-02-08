@@ -154,7 +154,9 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    clipBehavior: Clip.antiAlias,
                     child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
                       onTap: unlocked
                           ? () async {
                               await Navigator.of(context).push<bool>(
@@ -258,7 +260,9 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      clipBehavior: Clip.antiAlias,
                       child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
                         onTap: bossUnlocked
                             ? () async {
                                 await Navigator.of(context).push<bool>(
