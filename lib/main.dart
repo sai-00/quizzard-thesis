@@ -10,15 +10,25 @@ import 'screens/admin/admin_screen.dart';
 
 // Add this import for desktop sqflite ffi
 // (add dependency: sqflite_common_ffi in pubspec.yaml)
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+// Use a deferred import so the ffi library isn't loaded on Android/iOS at
+// import time (which can trigger native library loading). We'll load it
+// explicitly only for desktop platforms below.
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'
+    deferred as sqffi
+    show sqfliteFfiInit, databaseFactoryFfi;
+import 'package:sqflite/sqflite.dart' show databaseFactory;
 
 import 'dart:io';
 
-void main() {
-  // Only initialize ffi on desktop platforms
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Only initialize ffi on desktop platforms. Use the deferred import so
+  // Android/iOS never load the native sqlite3 library by accident.
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    await sqffi.loadLibrary();
+    sqffi.sqfliteFfiInit();
+    databaseFactory = sqffi.databaseFactoryFfi;
   }
 
   runApp(const MyApp());

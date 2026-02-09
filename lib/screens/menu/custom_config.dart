@@ -60,11 +60,15 @@ class _CustomConfigScreenState extends State<CustomConfigScreen> {
           ) ??
           0;
 
+      // disable foreign keys while clearing questions to avoid constraint errors
       await db.transaction((txn) async {
+        await txn.execute('PRAGMA foreign_keys = OFF;');
+        await txn.delete('gameProgress');
         await txn.delete('questionList');
         await txn.execute(
           "DELETE FROM sqlite_sequence WHERE name IN ('questionList');",
         );
+        await txn.execute('PRAGMA foreign_keys = ON;');
       });
 
       final after =

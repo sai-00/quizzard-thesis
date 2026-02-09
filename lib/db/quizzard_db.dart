@@ -27,7 +27,7 @@ class QuizzardDb {
         // create schema from asset if available
         try {
           final sql = await rootBundle.loadString('assets/db/gamedb.sql');
-          final statements = _splitSql(sql);
+          final statements = splitSql(sql);
           for (final s in statements) {
             final stmt = s.trim();
             if (stmt.isNotEmpty) {
@@ -61,13 +61,39 @@ class QuizzardDb {
     return database;
   }
 
-  // naive SQL splitter: splits on semicolon. Works for most asset .sql files.
-  List<String> _splitSql(String sql) {
-    return sql
-        .split(';')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
+  // Robust SQL splitter: splits on semicolons that are not inside single-quoted
+  // string literals. Handles doubled single-quotes used to escape a quote
+  // inside a literal (SQL: ''). Returns statements without the trailing
+  // semicolon and ignores empty statements.
+  List<String> splitSql(String sql) {
+    final List<String> out = [];
+    final sb = StringBuffer();
+    bool inQuote = false;
+    for (int i = 0; i < sql.length; i++) {
+      final ch = sql[i];
+      if (ch == "'") {
+        // detect doubled single-quote (escaped quote) -- consume both and
+        // keep them inside the buffer
+        if (i + 1 < sql.length && sql[i + 1] == "'") {
+          sb.write("''");
+          i++; // skip the escaped quote
+          continue;
+        }
+        inQuote = !inQuote;
+        sb.write(ch);
+        continue;
+      }
+      if (ch == ';' && !inQuote) {
+        final stmt = sb.toString().trim();
+        if (stmt.isNotEmpty) out.add(stmt);
+        sb.clear();
+        continue;
+      }
+      sb.write(ch);
+    }
+    final last = sb.toString().trim();
+    if (last.isNotEmpty) out.add(last);
+    return out;
   }
 
   // Check PRAGMA table_info and add missing columns.

@@ -39,11 +39,25 @@ class QuestionRepository {
 
   Future<int> delete(int id) async {
     final database = await _db.db;
-    return await database.delete(
-      'questionList',
-      where: 'questionID = ?',
-      whereArgs: [id],
-    );
+    // remove any dependent progress rows first to avoid FK constraint errors
+    try {
+      return await database.transaction<int>((txn) async {
+        await txn.delete(
+          'gameProgress',
+          where: 'questionID = ?',
+          whereArgs: [id],
+        );
+        final q = await txn.delete(
+          'questionList',
+          where: 'questionID = ?',
+          whereArgs: [id],
+        );
+        return q; // return number of questions deleted
+      });
+    } catch (e) {
+      // propagate or return 0 on failure
+      return 0;
+    }
   }
 
   Future<List<Map<String, dynamic>>> getSubjects() async {
