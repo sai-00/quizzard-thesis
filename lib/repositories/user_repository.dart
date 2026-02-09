@@ -21,8 +21,16 @@ class UserRepository {
     // delete dependent progress rows first so foreign key constraints don't block
     try {
       return await database.transaction<int>((txn) async {
-        await txn.delete('gameProgress', where: 'profileID = ?', whereArgs: [profileID]);
-        final u = await txn.delete('userProfile', where: 'profileID = ?', whereArgs: [profileID]);
+        await txn.delete(
+          'gameProgress',
+          where: 'profileID = ?',
+          whereArgs: [profileID],
+        );
+        final u = await txn.delete(
+          'userProfile',
+          where: 'profileID = ?',
+          whereArgs: [profileID],
+        );
         return u;
       });
     } catch (e) {

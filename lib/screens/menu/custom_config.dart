@@ -65,7 +65,9 @@ class _CustomConfigScreenState extends State<CustomConfigScreen> {
         await txn.execute('PRAGMA foreign_keys = OFF;');
         await txn.delete('gameProgress');
         await txn.delete('questionList');
-        await txn.execute("DELETE FROM sqlite_sequence WHERE name IN ('questionList');");
+        await txn.execute(
+          "DELETE FROM sqlite_sequence WHERE name IN ('questionList');",
+        );
         await txn.execute('PRAGMA foreign_keys = ON;');
       });
 

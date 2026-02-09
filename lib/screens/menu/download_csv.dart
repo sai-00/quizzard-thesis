@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class DownloadCsvScreen extends StatefulWidget {
   const DownloadCsvScreen({Key? key}) : super(key: key);
@@ -28,10 +29,10 @@ class _DownloadCsvScreenState extends State<DownloadCsvScreen> {
 
       String? dirPath;
 
-      // Android storage permission
+      // Android storage permission (use MANAGE_EXTERNAL_STORAGE on Android 11+/SDK 30+)
       if (Platform.isAndroid) {
-        final status = await Permission.storage.request();
-        if (!status.isGranted) {
+        final granted = await _ensureStoragePermission();
+        if (!granted) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Storage permission denied')),
@@ -68,6 +69,35 @@ class _DownloadCsvScreenState extends State<DownloadCsvScreen> {
       if (mounted) {
         setState(() => _isSaving = false);
       }
+    }
+  }
+
+  Future<bool> _ensureStoragePermission() async {
+    if (!Platform.isAndroid) return true;
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      final androidInfo = await deviceInfo.androidInfo;
+      final sdk = androidInfo.version.sdkInt;
+
+      if (sdk >= 30) {
+        // Android 11+ requires MANAGE_EXTERNAL_STORAGE for broad file access
+        final status = await Permission.manageExternalStorage.status;
+        if (status.isGranted) return true;
+
+        final result = await Permission.manageExternalStorage.request();
+        if (result.isGranted) return true;
+
+        if (result.isPermanentlyDenied) {
+          // Open app settings to let user grant "All files access"
+          await openAppSettings();
+        }
+        return false;
+      } else {
+        final result = await Permission.storage.request();
+        return result.isGranted;
+      }
+    } catch (e) {
+      return false;
     }
   }
 

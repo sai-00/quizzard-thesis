@@ -42,8 +42,16 @@ class QuestionRepository {
     // remove any dependent progress rows first to avoid FK constraint errors
     try {
       return await database.transaction<int>((txn) async {
-        await txn.delete('gameProgress', where: 'questionID = ?', whereArgs: [id]);
-        final q = await txn.delete('questionList', where: 'questionID = ?', whereArgs: [id]);
+        await txn.delete(
+          'gameProgress',
+          where: 'questionID = ?',
+          whereArgs: [id],
+        );
+        final q = await txn.delete(
+          'questionList',
+          where: 'questionID = ?',
+          whereArgs: [id],
+        );
         return q; // return number of questions deleted
       });
     } catch (e) {

@@ -13,8 +13,9 @@ import 'screens/admin/admin_screen.dart';
 // Use a deferred import so the ffi library isn't loaded on Android/iOS at
 // import time (which can trigger native library loading). We'll load it
 // explicitly only for desktop platforms below.
-import 'package:sqflite_common_ffi/sqflite_ffi.dart' deferred as sqffi
-  show sqfliteFfiInit, databaseFactoryFfi;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'
+    deferred as sqffi
+    show sqfliteFfiInit, databaseFactoryFfi;
 import 'package:sqflite/sqflite.dart' show databaseFactory;
 
 import 'dart:io';
