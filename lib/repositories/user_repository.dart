@@ -18,11 +18,16 @@ class UserRepository {
 
   Future<int> delete(int profileID) async {
     final database = await _db.db;
-    return await database.delete(
-      'userProfile',
-      where: 'profileID = ?',
-      whereArgs: [profileID],
-    );
+    // delete dependent progress rows first so foreign key constraints don't block
+    try {
+      return await database.transaction<int>((txn) async {
+        await txn.delete('gameProgress', where: 'profileID = ?', whereArgs: [profileID]);
+        final u = await txn.delete('userProfile', where: 'profileID = ?', whereArgs: [profileID]);
+        return u;
+      });
+    } catch (e) {
+      return 0;
+    }
   }
 
   Future<int> update(User user) async {

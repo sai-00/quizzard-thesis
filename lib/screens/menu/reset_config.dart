@@ -47,9 +47,11 @@ class _ResetConfigScreenState extends State<ResetConfigScreen> {
     try {
       final db = await QuizzardDb.instance.db;
 
+      // Use a transaction and disable foreign keys to ensure resets succeed
       await db.transaction((txn) async {
         await txn.execute('PRAGMA foreign_keys = OFF;');
 
+        await txn.delete('gameProgress');
         await txn.delete('questionList');
         await txn.delete('subject');
 
@@ -65,17 +67,15 @@ class _ResetConfigScreenState extends State<ResetConfigScreen> {
         """);
 
         final sql = await rootBundle.loadString('assets/db/gamedb.sql');
-        final statements = sql.split(';');
+        final statements = QuizzardDb.instance.splitSql(sql);
 
-        for (final raw in statements) {
-          final stmt = raw.trim();
-          if (stmt.isEmpty) continue;
-
+        for (final stmt in statements) {
           final lower = stmt.toLowerCase();
           if (lower.contains('insert into questionlist')) {
             await txn.execute(stmt);
           }
         }
+
         await txn.execute('PRAGMA foreign_keys = ON;');
       });
 
