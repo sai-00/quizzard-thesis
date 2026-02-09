@@ -27,6 +27,47 @@ class SubjectContent extends StatelessWidget {
   }
 }
 
+class _ShinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final whitePaint = Paint()
+      ..color = Colors.white.withOpacity(0.12)
+      ..style = PaintingStyle.fill;
+
+    final blackPaint = Paint()
+      ..color = Colors.black.withOpacity(0.025)
+      ..style = PaintingStyle.fill;
+
+    final double slant = size.height * 0.65;
+
+    Path stripe({required double startX, required double width}) {
+      return Path()
+        ..moveTo(startX, -slant)
+        ..lineTo(startX + width, -slant)
+        ..lineTo(startX + width - slant, size.height + slant)
+        ..lineTo(startX - slant, size.height + slant)
+        ..close();
+    }
+
+    final double pair1Start = size.width * 0.1;
+
+    canvas.drawPath(stripe(startX: pair1Start, width: 25), blackPaint);
+
+    canvas.drawPath(stripe(startX: pair1Start + 25, width: 64), whitePaint);
+
+    final double gap = 164;
+
+    final double pair2Start = pair1Start + 12 + 22 + gap;
+
+    canvas.drawPath(stripe(startX: pair2Start, width: 20), blackPaint);
+
+    canvas.drawPath(stripe(startX: pair2Start + 20, width: 45), whitePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class DifficultyChooser extends StatefulWidget {
   final int subjID;
   final String subjName;
@@ -168,35 +209,53 @@ class _DifficultyChooserState extends State<DifficultyChooser> with RouteAware {
                       await _reload();
                     }
                   : null,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18.0,
-                  vertical: 20.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      d,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: unlocked ? Colors.white : Colors.white70,
+              child: ClipRect(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18.0,
+                    vertical: 20.0,
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(painter: _ShinePainter()),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      unlocked
-                          ? 'Tap to start $d levels'
-                          : 'Locked — complete all levels (1–5) and final boss of previous difficulty',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: unlocked ? Colors.white : Colors.white70,
-                        fontSize: 14,
+
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              d,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: unlocked ? Colors.white : Colors.white70,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              unlocked
+                                  ? 'Tap to start $d levels'
+                                  : 'Locked — complete all levels (1–5) and final boss of previous difficulty',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: unlocked ? Colors.white : Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

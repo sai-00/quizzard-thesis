@@ -20,6 +20,47 @@ class LevelsScreen extends StatefulWidget {
   State<LevelsScreen> createState() => _LevelsScreenState();
 }
 
+class _ShinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final whitePaint = Paint()
+      ..color = Colors.white.withOpacity(0.05)
+      ..style = PaintingStyle.fill;
+
+    final blackPaint = Paint()
+      ..color = Colors.black.withOpacity(0.13)
+      ..style = PaintingStyle.fill;
+
+    final double slant = size.height * 0.65;
+
+    Path stripe({required double startX, required double width}) {
+      return Path()
+        ..moveTo(startX, -slant)
+        ..lineTo(startX + width, -slant)
+        ..lineTo(startX + width - slant, size.height + slant)
+        ..lineTo(startX - slant, size.height + slant)
+        ..close();
+    }
+
+    final double pair1Start = size.width * 0.1;
+
+    canvas.drawPath(stripe(startX: pair1Start, width: 25), blackPaint);
+
+    canvas.drawPath(stripe(startX: pair1Start + 25, width: 64), whitePaint);
+
+    final double gap = 164;
+
+    final double pair2Start = pair1Start + 12 + 22 + gap;
+
+    canvas.drawPath(stripe(startX: pair2Start, width: 20), blackPaint);
+
+    canvas.drawPath(stripe(startX: pair2Start + 20, width: 45), whitePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
   final _progressRepo = ProgressRepository();
   late Future<void> _future;
@@ -176,70 +217,89 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
                               });
                             }
                           : null,
-                      child: Container(
-                        color: color,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18.0,
-                          vertical: 20.0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                      child: ClipRect(
+                        child: Container(
+                          color: color,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18.0,
+                            vertical: 20.0,
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: CustomPaint(painter: _ShinePainter()),
+                                ),
+                              ),
+
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    'Level $lvl',
-                                    textAlign: TextAlign.left,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: unlocked
-                                          ? Colors.white
-                                          : Colors.white70,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Level $lvl',
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: unlocked
+                                                ? Colors.white
+                                                : Colors.white70,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          unlocked ? 'Unlocked' : 'Locked',
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                            color: unlocked
+                                                ? Colors.white
+                                                : Colors.white70,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    unlocked ? 'Unlocked' : 'Locked',
-                                    textAlign: TextAlign.left,
-                                    style: TextStyle(
-                                      color: unlocked
-                                          ? Colors.white
-                                          : Colors.white70,
-                                    ),
+                                  const SizedBox(width: 12),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: List.generate(3, (i) {
+                                      final stars = _starsForLevel(lvl);
+                                      final filledColor = unlocked
+                                          ? Colors.amber
+                                          : Colors.white70;
+                                      final hsl = HSLColor.fromColor(color);
+                                      final emptyColor = hsl
+                                          .withLightness(
+                                            (hsl.lightness - 0.18).clamp(
+                                              0.0,
+                                              1.0,
+                                            ),
+                                          )
+                                          .toColor();
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4.0,
+                                        ),
+                                        child: Icon(
+                                          Icons.star,
+                                          color: i < stars
+                                              ? filledColor
+                                              : emptyColor,
+                                          size: 35,
+                                        ),
+                                      );
+                                    }),
                                   ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: List.generate(3, (i) {
-                                final stars = _starsForLevel(lvl);
-                                final filledColor = unlocked
-                                    ? Colors.amber
-                                    : Colors.white70;
-                                final hsl = HSLColor.fromColor(color);
-                                final emptyColor = hsl
-                                    .withLightness(
-                                      (hsl.lightness - 0.18).clamp(0.0, 1.0),
-                                    )
-                                    .toColor();
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4.0,
-                                  ),
-                                  child: Icon(
-                                    Icons.star,
-                                    color: i < stars ? filledColor : emptyColor,
-                                    size: 35,
-                                  ),
-                                );
-                              }),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -282,80 +342,99 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
                                 });
                               }
                             : null,
-                        child: Container(
-                          color: bossUnlocked
-                              ? Colors.red
-                              : Colors.grey.shade700,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18.0,
-                            vertical: 20.0,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                        child: ClipRect(
+                          child: Container(
+                            color: bossUnlocked
+                                ? Colors.red
+                                : Colors.grey.shade700,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18.0,
+                              vertical: 20.0,
+                            ),
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: IgnorePointer(
+                                    child: CustomPaint(
+                                      painter: _ShinePainter(),
+                                    ),
+                                  ),
+                                ),
+
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      'Final Level',
-                                      textAlign: TextAlign.left,
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: bossUnlocked
-                                            ? Colors.white
-                                            : Colors.white70,
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Final Level',
+                                            textAlign: TextAlign.left,
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: bossUnlocked
+                                                  ? Colors.white
+                                                  : Colors.white70,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            bossUnlocked
+                                                ? 'Unlocked'
+                                                : 'Locked (complete level 5 to unlock)',
+                                            textAlign: TextAlign.left,
+                                            style: TextStyle(
+                                              color: bossUnlocked
+                                                  ? Colors.white
+                                                  : Colors.white70,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      bossUnlocked
-                                          ? 'Unlocked'
-                                          : 'Locked (complete level 5 to unlock)',
-                                      textAlign: TextAlign.left,
-                                      style: TextStyle(
-                                        color: bossUnlocked
-                                            ? Colors.white
-                                            : Colors.white70,
-                                      ),
+                                    const SizedBox(width: 12),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: List.generate(3, (i) {
+                                        final stars = _starsForLevel(99);
+                                        final filledColor = bossUnlocked
+                                            ? Colors.amber
+                                            : Colors.white70;
+                                        final hsl = HSLColor.fromColor(
+                                          bossUnlocked
+                                              ? Colors.red
+                                              : Colors.grey.shade700,
+                                        );
+                                        final emptyColor = hsl
+                                            .withLightness(
+                                              (hsl.lightness - 0.18).clamp(
+                                                0.0,
+                                                1.0,
+                                              ),
+                                            )
+                                            .toColor();
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 4.0,
+                                          ),
+                                          child: Icon(
+                                            Icons.star,
+                                            color: i < stars
+                                                ? filledColor
+                                                : emptyColor,
+                                            size: 35,
+                                          ),
+                                        );
+                                      }),
                                     ),
                                   ],
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: List.generate(3, (i) {
-                                  final stars = _starsForLevel(99);
-                                  final filledColor = bossUnlocked
-                                      ? Colors.amber
-                                      : Colors.white70;
-                                  final hsl = HSLColor.fromColor(
-                                    bossUnlocked
-                                        ? Colors.red
-                                        : Colors.grey.shade700,
-                                  );
-                                  final emptyColor = hsl
-                                      .withLightness(
-                                        (hsl.lightness - 0.18).clamp(0.0, 1.0),
-                                      )
-                                      .toColor();
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4.0,
-                                    ),
-                                    child: Icon(
-                                      Icons.star,
-                                      color: i < stars
-                                          ? filledColor
-                                          : emptyColor,
-                                      size: 35,
-                                    ),
-                                  );
-                                }),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),

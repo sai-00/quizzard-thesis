@@ -72,6 +72,10 @@ flutter:
     # database
     - assets/db/gamedb.sql
  
+    # app logos
+    - assets/quizzard_logo.PNG
+    - assets/quizzard_app.png
+
     # art assets
 
     # covers

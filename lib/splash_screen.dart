@@ -22,13 +22,12 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Text(
-          'Quizzard',
-          style: TextStyle(
-            color: Colors.purple,
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-          ),
+        child: Image.asset(
+          'assets/quizzard_logo.PNG',
+          width: 280,
+          height: 280,
+          fit: BoxFit.contain,
+          semanticLabel: 'Quizzard logo',
         ),
       ),
     );
