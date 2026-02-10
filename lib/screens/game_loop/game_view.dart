@@ -766,7 +766,7 @@ class _GameViewState extends State<GameView> {
           alignment: Alignment.topCenter,
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 34),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
