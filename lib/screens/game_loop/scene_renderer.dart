@@ -447,14 +447,20 @@ class SceneRendererState extends State<SceneRenderer> {
     debugPrint(
       'SceneRenderer: final lines count=${_lines.length} (loadedFromCustom=$loadedFromCustom)',
     );
-    // notify parent whether we loaded any lines
+
+    // Notify parent whether we loaded any lines first, then schedule the
+    // initial sprite application in a subsequent post-frame callback so the
+    // parent has a chance to update its state (for example, show an overlay)
+    // before the renderer applies a sprite. This avoids the parent and
+    // renderer racing to set the sprite at end-of-level.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onLoaded?.call(_lines.isNotEmpty);
+      if (_lines.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _applySprite(_lines.first.spriteState);
+        });
+      }
     });
-
-    if (_lines.isNotEmpty) {
-      _applySprite(_lines.first.spriteState);
-    }
   }
 
   SpriteState? _spriteFromString(String value) {
@@ -496,12 +502,17 @@ class SceneRendererState extends State<SceneRenderer> {
   }
 
   void _next() {
+    debugPrint(
+      '[SceneRenderer] _next called: index=$_index lines=${_lines.length}',
+    );
     if (_index + 1 >= _lines.length) {
+      debugPrint('[SceneRenderer] reached end; calling onFinished');
       widget.onFinished();
       return;
     }
 
     setState(() => _index++);
+    debugPrint('[SceneRenderer] advancing to index=$_index');
     _applySprite(_lines[_index].spriteState);
   }
 
@@ -556,28 +567,35 @@ class SceneRendererState extends State<SceneRenderer> {
         // Continue button for CSV-driven cutscenes
         Align(
           alignment: Alignment.bottomCenter,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 72, 39, 102),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+          child: SafeArea(
+            top: false,
+            minimum: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 72, 39, 102),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                ),
-                onPressed: () {
-                  if (widget.onNext != null) {
-                    widget.onNext!();
-                  } else {
-                    _next();
-                  }
-                },
-                child: const Text(
-                  'Continue',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                  onPressed: () {
+                    debugPrint('[SceneRenderer] Continue button pressed');
+                    if (widget.onNext != null) {
+                      debugPrint('[SceneRenderer] delegating onNext to parent');
+                      widget.onNext!();
+                    } else {
+                      debugPrint('[SceneRenderer] handling next locally');
+                      _next();
+                    }
+                  },
+                  child: const Text(
+                    'Continue',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
                 ),
               ),
             ),

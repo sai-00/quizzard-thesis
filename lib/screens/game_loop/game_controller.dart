@@ -25,6 +25,7 @@ class GameController {
   AnswerResult lastAnswerResult = AnswerResult.none;
   bool showingExplanation = false;
   String currentExplanation = '';
+  bool requiresRetry = false;
 
   void Function()? onUpdate;
 
@@ -105,6 +106,7 @@ class GameController {
       phase = GamePhase.cutsceneEnd;
       showingExplanation = true;
       currentExplanation = FeedbackMessages.retry();
+      requiresRetry = true;
       _notify();
       return;
     }
@@ -159,6 +161,7 @@ class GameController {
     } else {
       phase = GamePhase.cutsceneEnd;
       currentExplanation = FeedbackMessages.retry();
+      requiresRetry = true;
     }
 
     _notify();
@@ -175,6 +178,7 @@ class GameController {
       showingExplanation = false;
       lastAnswerResult = AnswerResult.none;
       currentExplanation = FeedbackMessages.intro();
+      requiresRetry = false;
     }
 
     _notify();
@@ -188,6 +192,7 @@ class GameController {
     showingExplanation = false;
     lastAnswerResult = AnswerResult.none;
     currentExplanation = FeedbackMessages.intro();
+    requiresRetry = false;
     _notify();
   }
 }
