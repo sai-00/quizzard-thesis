@@ -537,7 +537,7 @@ class SceneRendererState extends State<SceneRenderer> {
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 100),
+            padding: const EdgeInsets.only(bottom: 130),
             child: Container(
               width: MediaQuery.of(context).size.width * 0.9,
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
