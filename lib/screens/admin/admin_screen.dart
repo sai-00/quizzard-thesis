@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'admin_progress.dart';
 import '../menu/menu_screen.dart';
+import '../manual/manual_screen.dart';
 
 class AdminScreen extends StatefulWidget {
   final int? profileId;
@@ -28,6 +29,12 @@ class _AdminScreenState extends State<AdminScreen> {
       appBar: AppBar(
         title: const Text('Admin'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ManualScreen())),
+          ),
           IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         ],
       ),

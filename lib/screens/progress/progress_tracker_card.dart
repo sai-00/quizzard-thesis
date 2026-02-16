@@ -101,9 +101,7 @@ class _ProgressTrackerCardState extends State<ProgressTrackerCard> {
       final d = dt.day.toString().padLeft(2, '0');
       final m = dt.month.toString().padLeft(2, '0');
       final y = dt.year.toString();
-      final hh = dt.hour.toString().padLeft(2, '0');
-      final mm = dt.minute.toString().padLeft(2, '0');
-      return '$d-$m-$y $hh:$mm';
+      return '$d-$m-$y';
     } catch (_) {
       return raw;
     }

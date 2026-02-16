@@ -34,7 +34,7 @@ class _CustomConfigScreenState extends State<CustomConfigScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Delete All Questions'),
         content: const Text(
-          'This will delete ALL questions from the database. Continue?',
+          'WARNING: This will delete ALL questions AND progress reports of ALL learner accounts from the database. Continue?',
         ),
         actions: [
           TextButton(

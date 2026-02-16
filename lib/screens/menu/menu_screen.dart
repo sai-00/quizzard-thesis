@@ -351,14 +351,6 @@ class MenuScreen extends StatelessWidget {
               }
             },
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Logout'),
-            onTap: () => Navigator.of(
-              context,
-            ).pushNamedAndRemoveUntil('/', (r) => false),
-          ),
         ],
       ),
     );
