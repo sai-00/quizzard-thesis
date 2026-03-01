@@ -1,0 +1,29 @@
+level,placement,order,dialogue,sprite state
+1,beginning,1,"Today is very sunny.",
+1,beginning,2,"Let's go on another field trip!",
+1,beginning,3,"Hiya kids! Is everyone ready for the field trip?",correct
+1,beginning,4,"It's perfect for learning about the world.",talking
+1,beginning,5,"We can get started!",correct
+1,end,1,"Very good!",correct
+1,end,2,"Time for more questions...",talking
+2,beginning,1,"I love field trips!",correct
+2,beginning,2,"We discover many things.",wrong
+2,beginning,3,"Like this beautiful butterfly!",correct
+2,end,1,"Your answers are correct.",talking
+2,end,2,"You learn very quickly!",correct
+3,beginning,1,"I love going outside when the weather is good.",talking
+3,beginning,2,"Field trips are amazing!",correct
+3,end,1,"You know a lot of things already!",correct
+4,beginning,1,"Did you know ? Biology is my favourite topic.",talking
+4,beginning,2,"It teaches you about plants and animals!",correct
+4,beginning,3,"Do you like biology?",wrong
+4,end,1,"That's true!",correct
+5,beginning,1,"The field trip is almost over, sadly.",wrong
+5,beginning,2,"Only a few more questions now.",talking
+5,end,1,"You are my best student!",correct
+99,beginning,1,"I had fun on the field trip!",correct
+99,beginning,2,"Show me if you remember everything we learned about.",talking
+99,end,1,"Incredible! You did it!",correct
+99,end,2,"Did I make the questions too easy?",wrong
+99,end,3,"Of course not, you are the best!",correct
+99,end,4,"Thank you for joining me on this field trip. I hope you liked it!",talking

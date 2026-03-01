@@ -1,0 +1,28 @@
+level,placement,order,dialogue,sprite state
+1,beginning,1,"Today is a special day.",
+1,beginning,2,"It's another field trip!",
+1,beginning,3,"Hello kiddoes! Who is excited for the field trip?",correct
+1,beginning,4,"Of course, it is also a time for learning.",talking
+1,beginning,5,"Let's get started!",correct
+1,end,1,"You are correct!",correct
+1,end,2,"Oh look, a beetle! Or is it a spider?",wrong
+1,end,3,"Anyway, time for more questions.",talking
+2,beginning,1,"I love field trips.",talking
+2,beginning,2,"There is so much to discover!",correct
+2,end,1,"That's the right answers",talking
+3,beginning,1,"It is important to learn more about our world.",talking
+3,beginning,2,"That's the most fun part of a field trip!",correct
+3,end,1,"Your progress is very quick!",correct
+4,beginning,1,"My favourite topic at school is biology.",talking
+4,beginning,2,"It teaches you about plants and animals!",correct
+4,beginning,3,"And you, what is your favourite topic?",wrong
+4,end,1,"You are such a good learner!",correct
+5,beginning,1,"We are getting close to the end of this field trip",talking
+5,beginning,2,"But there is still a lot to learn!",correct
+5,end,1,"Amazing!",correct
+99,beginning,1,"I loved this field trip!",correct
+99,beginning,2,"Can you remember everything we learned about ?",wrong
+99,beginning,3,"These questions will be more difficult.",talking
+99,end,1,"Congratulations! The field trip is now over.",talking
+99,end,2,"We learned a lot today!",correct
+99,end,3,"Thank you for joining me on this road trip. I hope you had fun!",talking

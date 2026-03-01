@@ -1,1 +1,8 @@
 level,placement,order,dialogue,sprite state
+1,beginning,1,"Hello, this is a template!",talking
+1,beginning,2,"This dialouge appears after the first one",wrong
+1,end,1,"This is the end of the level",correct
+2,beginning,1,"This is the beginning of the second level",talking
+2,end,1,"This is the end of the second level",correct
+99,beginning,1,"This is the beginning of the final level",talking
+99,end,1,"This is the end of the final level",correct

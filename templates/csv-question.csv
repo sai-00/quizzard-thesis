@@ -1,1 +1,3 @@
-subjectid,questiontext,option1,option2,option3,option4,correctanswer,correctexplation
+subjectid,questiontext,option1,option2,option3,option4,correctanswer,correctexplation,difficulty
+1,"What is 504 in words?","Five hundred four","Five hundred five","Four hundred five","Five hundred forty","Five hundred four","504 is read as five hundred four.","Medium"
+1,"What is 809 in words?","Eight hundred nine","Eight hundred ten","Nine hundred eight","Eight hundred ninety","Eight hundred nine","809 is read as eight hundred nine.","Medium"

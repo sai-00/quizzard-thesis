@@ -1,0 +1,28 @@
+level,placement,order,dialogue,sprite state
+1,beginning,1,"This morning, you did something very bad... again.",
+1,beginning,2,"You were playing with the ball, and broke two windows.",
+1,beginning,3,"You were sent to detention at the library, where the teacher is waiting for you...",
+1,beginning,4,"Oh dear, you're the little mischief-maker who broke two windows, aren't you?",talking
+1,beginning,5,"Let's use this detention for some learning.",wrong
+1,beginning,5,"If you show good progress, this detention won't be too long!",correct
+1,end,1,"That was correct.",talking
+1,end,2,"Let us continue with some more exercises!",correct
+2,beginning,1,"Now that you are warmed up, time for more questions.",talking
+2,end,1,"Good ! You understood everything.",correct
+2,end,2,"Your answers were very satisfying.",talking
+3,beginning,1,"I think these exercises are more interesting than writing 100 lines!",correct
+3,beginning,2,"Time for the next ones",wrong
+3,end,1,"You are working quite well already.",talking
+3,end,2,"Maybe I'll let you leave detention sooner",correct
+4,beginning,1,"Turn your book to the next page.",talking
+4,beginning,2,"Let's see how you answer this time!",correct
+4,end,1,"You are such a good student, bravo!",correct
+5,beginning,1,"A few more questions and your detention will be over!",wrong
+5,beginning,2,"How will you answer these?",correct
+5,end,1,"Amazing! You are close to perfection!",correct
+99,beginning,1,"This detention went quite fast, thanks to your intelligence.",talking
+99,beginning,2,"There are only a few questions yet.",correct
+99,beginning,3,"It will be the hardest ones, but I believe in you!",wrong
+99,end,1,"Wonderful! You have answered all the questions I had for you.",correct
+99,end,2,"I am very proud of you.",correct
+99,end,3,"Your detention is over now, keep being a good student and congratulations!",correct

@@ -1,6 +1,29 @@
 level,placement,order,dialogue,sprite state
-1,beginning,1,"These rooms already are starting to look the same...",wrong
-2,beginning,2,"I hope we can get out of here soon.",wrong
-3,beginning,3,"Wait, I think I see something ahead!",correct
-4,beginning,4,"Let's check it out!",correct
-1,end,1,"Phew! That was close. Let's keep going.",correct
+1,beginning,1,"Oh no, I can't find the way... This cursed tower is a maze.",wrong
+1,beginning,2,"If only someone was here to help me, like my friend from last time...",wrong
+1,beginning,3,"AH! IT'S YOU!",correct
+1,beginning,4,"I just said your name, and you appeared!",talking
+1,beginning,5,"I got lost again...",wrong
+1,beginning,6,"But I believe in you! Now, not only can we find the way out, but we can get the treasure too!",correct
+1,end,1,"See ? With you at my side, we'll get to the treasure in no time!",correct
+2,beginning,1,"Alright, the next few puzzles don't look easy.",talking
+2,beginning,2,"But for you it will be nothing!",correct
+2,end,1,"Wow, you're so good at this!",correct
+3,beginning,1,"Well well well, more puzzles... you've got this!",talking
+3,end,1,"You make it look so easy...",wrong
+3,end,2,"We're making a lot of progress!",correct
+4,beginning,1,"Ha ha! More puzzles... but nothing can stop you!",talking
+4,end,1,"This looked more difficult than before, and yet you make it look so easy!",correct
+4,end,2,"We're getting close to the end, I can feel it",talking
+5,beginning,1,"Only a few puzzles before the treasure.",talking
+5,beginning,2,"For you it'll be a piece of cake to solve!",correct
+5,end,1,"I was ready to stop looking for the treasure, but thanks to you we got to the top of the tower!",correct
+99,beginning,1,"The treasure is very close, I know it!",talking
+99,beginning,2,"But of course, the last few puzzles are the most difficult.",talking
+99,beginning,3,"Not for you though, you can do it!",correct
+99,end,1,"We finally made it out!",correct
+99,end,2,"You're really good at these puzzles. I've never seen someone solve so many hard ones before!",wrong
+99,end,3,"And now... time for the treasure.",talking
+99,end,4,"A giant pizza!",correct
+99,end,5,"Thanks to you, we got to the end of the tower and got a reward!",talking
+99,end,6,"My friend, I will call you every time I go treasure hunting, I promise you!",correct

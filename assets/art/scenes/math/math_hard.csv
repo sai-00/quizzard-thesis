@@ -1,0 +1,30 @@
+level,placement,order,dialogue,sprite state
+1,beginning,1,"Ah, looks like I took a wrong turn again...",wrong
+1,beginning,2,"I can't even solve this puzzle, maybe I should give up on the treasure.",wrong
+1,beginning,3,"WAH! It's you? How lucky!",correct
+1,beginning,4,"I was ready to give up on the treasure hiding on this cursed tower...",talking
+1,beginning,5,"But thanks to you I might just solve the puzzles blocking the way!",correct
+1,beginning,6,"Would you please help me?",wrong
+1,end,1,"Woah! You made it look so easy!",correct
+1,end,2,"Could you please help me with the other one too?",wrong
+2,beginning,1,"More puzzles? When is this tower going to end...",wrong
+2,beginning,2,"Together we can do it though!",correct
+2,end,1,"I knew it! You've got what it takes to be a good treasure hunter haha!",correct
+3,beginning,1,"You've been doing great so far!",correct
+3,beginning,2,"Let's see how these puzzles go.",talking
+3,end,1,"We're making good progress.",talking
+4,beginning,1,"We're getting close to the top of the cursed tower.",wrong
+4,beginning,2,"And that means we're close to the treasure!",correct
+4,end,1,"Nothing can resist you!",talking
+5,beginning,1,"Puzzles again? When is this tower going to end?",wrong
+5,beginning,2,"Well, you've got this though, so it's alright",talking
+5,end,1,"Piece of cake!",correct
+99,beginning,1,"Oh... looks like we're close to the end.",talking
+99,beginning,2,"The hardest puzzles are here...",wrong
+99,beginning,3,"Alright! Let's do it then!",correct
+99,end,1,"Ha ha, you did it!",correct
+99,end,2,"The treasure hiding in the tower... I knew it was worth solving all these puzzles.",talking
+99,end,3,"A GIANT PILE OF SWEETS AND CHOCOLATES!",correct
+99,end,4,"Don't eat too much though, or you'll be sick.",wrong
+99,end,5,"Thank you, my friend, with your help we got to the end of this tower.",talking
+99,end,6,"I'll call you again if I go explore again... maybe there will be more chocolates!",correct

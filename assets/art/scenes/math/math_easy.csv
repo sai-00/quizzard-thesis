@@ -1,8 +1,25 @@
 level,placement,order,dialogue,sprite state
-1,beginning,1,"You've recieved an invitation by the funny rogue",
-1,beginning,2,"This place doesn't seem very nice..",
-1,beginning,3,"Welcome to the cursed tower!",wrong
-1,beginning,4,"Let’s explore together!",correct
-1,end,1,"Great job! Let's move on. I'm scared of this fr",correct
-
-99,beginning,1,"Alright, let's rock",talking
+1,beginning,1,"Was it right, right, left? Or left, right, left... Oh no, it looks like I'm lost!",wrong
+1,beginning,2,"Ah? Someone is here! I'm glad you appeared, I was getting lo- I mean, I was getting to the treasure!",correct
+1,beginning,3,"I heard this cursed tower has a precious chest at the end.",talking
+1,beginning,4,"We just need to solve a few puzzles, but they're too hard for me...",wrong
+1,beginning,5,"Maybe you could do it!",correct
+1,end,1,"I knew I was right to count on you!",correct
+1,end,2,"Let's move on to the next one.",talking
+2,beginning,1,"Another one... it's so easy I could do it my sleep, so I'll let you work it out.",talking
+2,end,1,"Ha ha, no puzzle resists you!",correct
+3,beginning,1,"Well... looks like there's more ahead...",wrong
+3,beginning,2,"I believe in you though!",correct
+3,end,1,"You're so smart! Almost as smart as me.",talking
+4,beginning,1,"More puzzles... but that's not a problem for us!",correct
+4,end,1,"You're so good at this... maybe you should be a treasure hunter too?",wrong
+5,beginning,1,"Those next puzzles look harder, but I know you- I mean we can do it!",talking
+5,end,1,"Wow, you solved those problems so easily!",correct
+5,end,2,"With you, exploring the tower is so fast...",talking
+5,end,3,"I could have done it alone too, of course! But its more fun together!",correct
+99,beginning,1,"Only one more room before the treasure. I heard this puzzle was the hardest though, good luck!",talking
+99,end,1,"Ha ha, you did it!",correct
+99,end,2,"The treasure is all mi- all ours now",talking
+99,end,3,"THE BIGGEST CHOCOLATE CAKE IN THE WORLD!!",correct
+99,end,4,"Thank you for helping me... have some cake too, its for you",talking
+99,end,5,"Next time I hunt a treasure, I'll make sure to call you, my friend!",correct

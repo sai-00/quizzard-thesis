@@ -1,0 +1,28 @@
+level,placement,order,dialogue,sprite state
+1,beginning,1,"This morning, you did something terribly bad... again...?",
+1,beginning,2,"You were playing with the ball, and broke three windows.",
+1,beginning,3,"You were sent to detention at the library, where the teacher is waiting for you...",
+1,beginning,4,"Oh dear, you're the little rascal who broke three windows, aren't you?",talking
+1,beginning,5,"Let's use this detention time to practice reading.",wrong
+1,end,1,"It was correct.",talking
+1,end,2,"Let's continue with some more exercises!",correct
+2,beginning,1,"Time for more questions after this warmup.",talking
+2,end,1,"That's right!",correct
+2,end,2,"Your answers were very good.",talking
+3,beginning,1,"Time for the next exercise.",talking
+3,end,1,"Good answers!.",talking
+3,end,2,"I'll let you leave detention sooner if you keep working hard.",correct
+4,beginning,1,"Let's go to the next page in your book.",talking
+4,beginning,2,"I'm sure you can answer these questions correctly!",correct
+4,end,1,"Very good!",correct
+4,end,2,"You have been doing very well so far.",correct
+5,beginning,1,"Your detention is almost over",wrong
+5,beginning,2,"If you answer these exercises correctly first!",correct
+5,end,1,"Wonderful! That was impressive",correct
+99,beginning,1,"This detention went quite fast.",talking
+99,beginning,2,"You've been doing really well with these exercises!",correct
+99,beginning,3,"There are only a few questions yet.",talking
+99,beginning,4,"It will be a bit harder though...",wrong
+99,end,1,"Amazing! You have completed all the exercises.",correct
+99,end,2,"I am very proud of you.",correct
+99,end,3,"Your detention is over now, keep being a good student and congratulations!",correct
