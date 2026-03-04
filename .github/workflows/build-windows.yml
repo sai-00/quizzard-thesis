@@ -84,13 +84,16 @@ jobs:
 
       - name: Place DB into Release folder
         run: |
-          $release = 'build\\windows\\runner\\Release'
-          if (Test-Path $release) {
-            Copy-Item -Path "$PWD\\gamedb.db" -Destination $release -Force
-          } else {
-            Write-Error "Release folder not found: $release"
+          $releaseDir = Get-ChildItem -Path build\\windows -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^Release$' } | Select-Object -First 1
+          if (-not $releaseDir) {
+            Write-Host "Could not find a Release folder under build\\windows. Listing build\\windows contents for debugging:"
+            Get-ChildItem -Path build\\windows -Recurse | ForEach-Object { Write-Host $_.FullName }
+            Write-Error "Release folder not found under build\\windows"
             exit 1
           }
+          $release = $releaseDir.FullName
+          Write-Host "Found Release folder: $release"
+          Copy-Item -Path "$PWD\\gamedb.db" -Destination $release -Force
         shell: powershell
 
       - name: Optional code signing (use SIGN_PFX and SIGN_PASS secrets)
@@ -109,8 +112,9 @@ jobs:
           $pfxPath = Join-Path $PWD 'signcert.pfx'
           [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
 
-          $release = Join-Path $PWD 'build\\windows\\runner\\Release'
-          if (-not (Test-Path $release)) { Write-Error "Release folder missing"; exit 1 }
+          $releaseDir = Get-ChildItem -Path build\\windows -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^Release$' } | Select-Object -First 1
+          if (-not $releaseDir) { Write-Error "Release folder missing under build\\windows"; exit 1 }
+          $release = $releaseDir.FullName
 
           # Sign all EXE and DLL files in the Release folder
           Get-ChildItem -Path $release -Filter *.exe -Recurse | ForEach-Object {
@@ -121,7 +125,12 @@ jobs:
           }
 
       - name: Compress Release folder
-        run: powershell -Command "Compress-Archive -Path build\\windows\\runner\\Release\\* -DestinationPath quizzard-windows-portable.zip"
+        run: |
+          $releaseDir = Get-ChildItem -Path build\\windows -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^Release$' } | Select-Object -First 1
+          if (-not $releaseDir) { Write-Error "Release folder missing under build\\windows"; exit 1 }
+          $release = $releaseDir.FullName
+          Write-Host "Compressing contents of: $release"
+          Compress-Archive -Path (Join-Path $release '*') -DestinationPath quizzard-windows-portable.zip
 
       - name: Upload portable ZIP
         uses: actions/upload-artifact@v4
