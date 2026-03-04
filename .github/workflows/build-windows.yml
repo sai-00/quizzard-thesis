@@ -121,6 +121,25 @@ jobs:
           }
         shell: powershell
 
+      - name: Collect and copy DLL runtime files into Release
+        run: |
+          $releaseDir = Get-ChildItem -Path build\windows -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^Release$' } | Select-Object -First 1
+          if (-not $releaseDir) { Write-Error "Release folder missing under build\windows"; exit 1 }
+          $release = $releaseDir.FullName
+          Write-Host "Collecting DLLs under build/windows to copy into: $release"
+          $dlls = Get-ChildItem -Path build\windows -Filter *.dll -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "*cmake*") }
+          if (-not $dlls) { Write-Host "No DLLs found under build/windows"; exit 0 }
+          foreach ($d in $dlls) {
+            $dest = Join-Path $release $d.Name
+            if (-not (Test-Path $dest)) {
+              Copy-Item -Path $d.FullName -Destination $dest -Force
+              Write-Host "Copied $($d.Name) to Release folder"
+            } else {
+              Write-Host "$($d.Name) already present in Release folder"
+            }
+          }
+        shell: powershell
+
       - name: Optional code signing (use SIGN_PFX and SIGN_PASS secrets)
         env:
           SIGN_PFX: ${{ secrets.SIGN_PFX }}
