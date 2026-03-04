@@ -25,6 +25,12 @@ jobs:
       - name: Build Windows release
         run: flutter build windows --release
 
+      - name: List build/windows outputs (debug)
+        run: |
+          Write-Host "Listing build/windows contents for debugging"
+          Get-ChildItem -Path build\\windows -Recurse | ForEach-Object { Write-Host $_.FullName }
+        shell: powershell
+
       - name: Create pre-populated SQLite DB
         shell: bash
         run: |
@@ -94,6 +100,25 @@ jobs:
           $release = $releaseDir.FullName
           Write-Host "Found Release folder: $release"
           Copy-Item -Path "$PWD\\gamedb.db" -Destination $release -Force
+
+      - name: Ensure EXE present in Release folder
+        run: |
+          $releaseDir = Get-ChildItem -Path build\\windows -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^Release$' } | Select-Object -First 1
+          if (-not $releaseDir) { Write-Error "Release folder missing under build\\windows"; exit 1 }
+          $release = $releaseDir.FullName
+          # Find any exe files under build/windows
+          $exes = Get-ChildItem -Path build\\windows -Filter *.exe -Recurse -ErrorAction SilentlyContinue
+          if (-not $exes) { Write-Host "No executables found under build/windows"; exit 0 }
+          foreach ($e in $exes) {
+            Write-Host "Found exe: $($e.FullName)"
+            $dest = Join-Path $release $e.Name
+            if (-not (Test-Path $dest)) {
+              Copy-Item -Path $e.FullName -Destination $dest -Force
+              Write-Host "Copied $($e.Name) to $release"
+            } else {
+              Write-Host "$($e.Name) already present in Release folder"
+            }
+          }
         shell: powershell
 
       - name: Optional code signing (use SIGN_PFX and SIGN_PASS secrets)
