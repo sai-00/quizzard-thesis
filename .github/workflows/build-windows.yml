@@ -94,12 +94,16 @@ jobs:
         shell: powershell
 
       - name: Optional code signing (use SIGN_PFX and SIGN_PASS secrets)
-        if: ${{ secrets.SIGN_PFX != '' }}
         env:
           SIGN_PFX: ${{ secrets.SIGN_PFX }}
           SIGN_PASS: ${{ secrets.SIGN_PASS }}
         shell: powershell
         run: |
+          if (-not $env:SIGN_PFX) {
+            Write-Host "SIGN_PFX not provided; skipping code signing"
+            exit 0
+          }
+
           # Decode PFX from base64 secret and write to file
           $pfxBytes = [Convert]::FromBase64String($env:SIGN_PFX)
           $pfxPath = Join-Path $PWD 'signcert.pfx'
