@@ -140,6 +140,32 @@ jobs:
           }
         shell: powershell
 
+      - name: Collect and copy data folders and runtime assets into Release
+        run: |
+          $releaseDir = Get-ChildItem -Path build\windows -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^Release$' } | Select-Object -First 1
+          if (-not $releaseDir) { Write-Error "Release folder missing under build\windows"; exit 1 }
+          $release = $releaseDir.FullName
+          Write-Host "Searching for 'data' folders under build/windows to copy into $release\data"
+          $dataDirs = Get-ChildItem -Path build\windows -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -ieq 'data' }
+          foreach ($dd in $dataDirs) {
+            $target = Join-Path $release 'data'
+            Write-Host "Copying data from $($dd.FullName) -> $target"
+            Copy-Item -Path (Join-Path $dd.FullName '*') -Destination $target -Recurse -Force
+          }
+
+          # Copy any icudtl.dat files and other standalone runtime assets
+          $runtimeFiles = Get-ChildItem -Path build\windows -Filter icudtl.dat -Recurse -ErrorAction SilentlyContinue
+          foreach ($f in $runtimeFiles) {
+            $dest = Join-Path $release $f.Name
+            if (-not (Test-Path $dest)) {
+              Copy-Item -Path $f.FullName -Destination $dest -Force
+              Write-Host "Copied runtime file: $($f.Name) to Release"
+            } else {
+              Write-Host "$($f.Name) already present in Release folder"
+            }
+          }
+        shell: powershell
+
       - name: Optional code signing (use SIGN_PFX and SIGN_PASS secrets)
         env:
           SIGN_PFX: ${{ secrets.SIGN_PFX }}
