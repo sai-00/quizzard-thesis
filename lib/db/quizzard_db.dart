@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io' show File, Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
@@ -9,6 +11,37 @@ class QuizzardDb {
 
   Database? _db;
 
+  // Resolve a portable database path.
+  // On desktop platforms attempt to use an executable-relative file so the
+  // app can be distributed as a portable ZIP. If that location isn't
+  // writable, fall back to the normal `getDatabasesPath()` provided by
+  // the `sqflite` package (which is platform-appropriate).
+  Future<String> _resolveDbPath() async {
+    if (kIsWeb) {
+      throw UnsupportedError('sqflite is not supported on the web');
+    }
+
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      try {
+        final exeDir = File(Platform.resolvedExecutable).parent.path;
+        final candidate = p.join(exeDir, 'gamedb.db');
+        final file = File(candidate);
+        if (await file.exists()) return candidate;
+
+        // Try creating the file to verify writability. If creation fails,
+        // we'll fall back to the default databases path.
+        await file.create(recursive: true);
+        // leave the file empty; onCreate will populate the schema
+        return candidate;
+      } catch (_) {
+        // ignore and fallback
+      }
+    }
+
+    final databasesPath = await getDatabasesPath();
+    return p.join(databasesPath, 'gamedb.db');
+  }
+
   Future<Database> get db async {
     if (_db != null) return _db!;
     _db = await _initDb();
@@ -16,8 +49,7 @@ class QuizzardDb {
   }
 
   Future<Database> _initDb() async {
-    final databasesPath = await getDatabasesPath();
-    final path = p.join(databasesPath, 'gamedb.db');
+    final path = await _resolveDbPath();
 
     // open database with onCreate + onOpen migration checks
     final database = await openDatabase(

@@ -1,0 +1,126 @@
+name: Build Windows Portable
+
+on:
+  push:
+    branches: [ testing-branch ]
+  workflow_dispatch: {}
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Windows release
+        run: flutter build windows --release
+
+      - name: Create pre-populated SQLite DB
+        shell: bash
+        run: |
+          python - <<'PY'
+          import sqlite3, io, os
+
+          sql_path = os.path.join(os.getcwd(), 'assets', 'db', 'gamedb.sql')
+          out_db = os.path.join(os.getcwd(), 'gamedb.db')
+
+          def split_sql(sql):
+              out = []
+              buf = []
+              in_quote = False
+              i = 0
+              while i < len(sql):
+                  ch = sql[i]
+                  if ch == "'":
+                      if i + 1 < len(sql) and sql[i+1] == "'":
+                          buf.append("''")
+                          i += 2
+                          continue
+                      in_quote = not in_quote
+                      buf.append(ch)
+                      i += 1
+                      continue
+                  if ch == ';' and not in_quote:
+                      stmt = ''.join(buf).strip()
+                      if stmt:
+                          out.append(stmt)
+                      buf = []
+                      i += 1
+                      continue
+                  buf.append(ch)
+                  i += 1
+              last = ''.join(buf).strip()
+              if last:
+                  out.append(last)
+              return out
+
+          with open(sql_path, 'r', encoding='utf-8') as f:
+              sql = f.read()
+
+          stmts = split_sql(sql)
+          if os.path.exists(out_db):
+              os.remove(out_db)
+          conn = sqlite3.connect(out_db)
+          cur = conn.cursor()
+          for s in stmts:
+              try:
+                  cur.execute(s)
+              except Exception as e:
+                  # ignore individual statement failures
+                  pass
+          conn.commit()
+          conn.close()
+          print('Created pre-populated DB at', out_db)
+
+      - name: Place DB into Release folder
+        run: |
+          $release = 'build\\windows\\runner\\Release'
+          if (Test-Path $release) {
+            Copy-Item -Path "$PWD\\gamedb.db" -Destination $release -Force
+          } else {
+            Write-Error "Release folder not found: $release"
+            exit 1
+          }
+        shell: powershell
+
+      - name: Optional code signing (use SIGN_PFX and SIGN_PASS secrets)
+        if: ${{ secrets.SIGN_PFX != '' }}
+        env:
+          SIGN_PFX: ${{ secrets.SIGN_PFX }}
+          SIGN_PASS: ${{ secrets.SIGN_PASS }}
+        shell: powershell
+        run: |
+          # Decode PFX from base64 secret and write to file
+          $pfxBytes = [Convert]::FromBase64String($env:SIGN_PFX)
+          $pfxPath = Join-Path $PWD 'signcert.pfx'
+          [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
+
+          $release = Join-Path $PWD 'build\\windows\\runner\\Release'
+          if (-not (Test-Path $release)) { Write-Error "Release folder missing"; exit 1 }
+
+          # Sign all EXE and DLL files in the Release folder
+          Get-ChildItem -Path $release -Filter *.exe -Recurse | ForEach-Object {
+            & signtool.exe sign /f $pfxPath /p $env:SIGN_PASS /tr http://timestamp.digicert.com /td sha256 /fd sha256 $_.FullName
+          }
+          Get-ChildItem -Path $release -Filter *.dll -Recurse | ForEach-Object {
+            & signtool.exe sign /f $pfxPath /p $env:SIGN_PASS /tr http://timestamp.digicert.com /td sha256 /fd sha256 $_.FullName
+          }
+
+      - name: Compress Release folder
+        run: powershell -Command "Compress-Archive -Path build\\windows\\runner\\Release\\* -DestinationPath quizzard-windows-portable.zip"
+
+      - name: Upload portable ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: quizzard-windows-portable
+          path: quizzard-windows-portable.zip
