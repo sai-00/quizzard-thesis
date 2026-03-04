@@ -166,6 +166,41 @@ jobs:
           }
         shell: powershell
 
+      - name: Normalize asset layout into data\flutter_assets
+        run: |
+          $releaseDir = Get-ChildItem -Path build\windows -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^Release$' } | Select-Object -First 1
+          if (-not $releaseDir) { Write-Error "Release folder missing under build\windows"; exit 1 }
+          $release = $releaseDir.FullName
+          $dataPath = Join-Path $release 'data'
+          $flutterAssetsPath = Join-Path $dataPath 'flutter_assets'
+
+          if (-not (Test-Path $dataPath)) {
+            Write-Host "No data folder at $dataPath; skipping normalization"
+            exit 0
+          }
+
+          # If flutter_assets already exists, assume layout is correct
+          if (Test-Path $flutterAssetsPath) {
+            Write-Host "flutter_assets already present at $flutterAssetsPath"
+            exit 0
+          }
+
+          # Create flutter_assets and move top-level data files/folders into it,
+          # except keep any existing flutter_assets (none) and not move gamedb.db
+          New-Item -ItemType Directory -Path $flutterAssetsPath -Force | Out-Null
+          Get-ChildItem -Path $dataPath | ForEach-Object {
+            if ($_.Name -ieq 'flutter_assets') { return }
+            if ($_.Name -ieq 'gamedb.db') { return }
+            $source = $_.FullName
+            $dest = Join-Path $flutterAssetsPath $_.Name
+            Write-Host "Moving $source -> $dest"
+            # Use Copy-Item then Remove-Item to avoid cross-volume move issues
+            Copy-Item -Path $source -Destination $dest -Recurse -Force
+            Remove-Item -Path $source -Recurse -Force
+          }
+          Write-Host "Normalized assets into $flutterAssetsPath"
+        shell: powershell
+
       - name: Optional code signing (use SIGN_PFX and SIGN_PASS secrets)
         env:
           SIGN_PFX: ${{ secrets.SIGN_PFX }}
