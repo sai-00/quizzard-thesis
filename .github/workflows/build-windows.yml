@@ -14,8 +14,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          # pin a specific released SDK to avoid lookup/resolution failures
-          flutter-version: '3.10.6'
+          flutter-version: '3.38.9'
 
       - name: Enable Windows desktop
         run: flutter config --enable-windows-desktop
