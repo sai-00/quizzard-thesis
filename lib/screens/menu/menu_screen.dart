@@ -13,6 +13,7 @@ import 'add_csv.dart';
 import 'add_cutscene_csv.dart';
 import 'download_csv.dart';
 import 'reset_config.dart';
+import 'archive_data.dart';
 
 class MenuScreen extends StatelessWidget {
   final bool hideSubjects;
@@ -70,6 +71,14 @@ class MenuScreen extends StatelessWidget {
             title: const Text('Reset Configurations'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const ResetConfigScreen()),
+            ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.archive),
+            title: const Text('Archive Learner Progress'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ArchiveDataScreen()),
             ),
           ),
           const Divider(),

@@ -34,8 +34,15 @@ class _AdminProgressListState extends State<AdminProgressList> {
     final nonAdminUsers = users.where((u) => u.isAdmin != true).toList();
     final cards = <Widget>[];
 
+    // Build a temporary list containing per-user stats so we can sort by total points
+    final List<Map<String, dynamic>> userStats = [];
+
     for (final u in nonAdminUsers) {
       final rows = await _progressRepo.getByProfile(u.profileID!);
+
+      // compute total cumulative points for this user
+      final totalPoints = rows.fold<int>(0, (p, e) => p + e.points);
+
       // latest runID from most recent row
       String? latestRun;
       String? latestDate;
@@ -69,12 +76,28 @@ class _AdminProgressListState extends State<AdminProgressList> {
         subjDiff[r.subjID]![diff] = (subjDiff[r.subjID]![diff] ?? 0) + r.points;
       }
 
+      userStats.add({
+        'user': u,
+        'totalPoints': totalPoints,
+        'latestDate': latestDate,
+        'latestSessionPoints': latestSessionPoints,
+        'subjDiff': subjDiff,
+      });
+    }
+
+    // sort descending by cumulative points (highest first)
+    userStats.sort(
+      (a, b) => (b['totalPoints'] as int).compareTo(a['totalPoints'] as int),
+    );
+
+    for (final s in userStats) {
+      final u = s['user'];
       cards.add(
         AdminProgressCard(
           user: u,
-          latestDate: latestDate,
-          latestSessionPoints: latestSessionPoints,
-          subjDifficultyPoints: subjDiff,
+          latestDate: s['latestDate'] as String?,
+          latestSessionPoints: s['latestSessionPoints'] as int,
+          subjDifficultyPoints: s['subjDiff'] as Map<int, Map<String, int>>,
           subjectNames: subjectNames,
         ),
       );
