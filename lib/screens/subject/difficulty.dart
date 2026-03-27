@@ -222,7 +222,6 @@ class _DifficultyChooserState extends State<DifficultyChooser> with RouteAware {
                           child: CustomPaint(painter: _ShinePainter()),
                         ),
                       ),
-
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [

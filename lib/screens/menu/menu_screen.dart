@@ -160,9 +160,8 @@ class MenuScreen extends StatelessWidget {
                   (u) => u.profileID == adminProfileId,
                   orElse: () => User(profileID: adminProfileId, name: 'Admin'),
                 );
-                final hashed = sha256
-                    .convert(utf8.encode(newCtrl.text.trim()))
-                    .toString();
+                final hashed =
+                    sha256.convert(utf8.encode(newCtrl.text.trim())).toString();
                 final updated = User(
                   profileID: admin.profileID,
                   name: admin.name,

@@ -291,9 +291,8 @@ class SceneRendererState extends State<SceneRenderer> {
       final dialogue = row[3].toString();
       final spriteStr = row[4].toString().toLowerCase();
 
-      final placement = placementStr == 'end'
-          ? ScenePlacement.end
-          : ScenePlacement.beginning;
+      final placement =
+          placementStr == 'end' ? ScenePlacement.end : ScenePlacement.beginning;
 
       if (level != widget.level || placement != widget.placement) continue;
 
@@ -393,9 +392,8 @@ class SceneRendererState extends State<SceneRenderer> {
         debugPrint('SceneRenderer: parsed assetRows=${assetRows.length}');
         int assetStart = 0;
         if (assetRows.isNotEmpty) {
-          final firstCell = assetRows.first.isNotEmpty
-              ? assetRows.first[0].toString()
-              : '';
+          final firstCell =
+              assetRows.first.isNotEmpty ? assetRows.first[0].toString() : '';
           if (int.tryParse(firstCell) == null) assetStart = 1;
         }
 

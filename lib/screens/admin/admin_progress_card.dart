@@ -6,7 +6,7 @@ class AdminProgressCard extends StatelessWidget {
   final String? latestDate;
   final int latestSessionPoints;
   final Map<int, Map<String, int>>
-  subjDifficultyPoints; // subjID -> {difficulty: points}
+      subjDifficultyPoints; // subjID -> {difficulty: points}
   final Map<int, String> subjectNames;
 
   const AdminProgressCard({
@@ -83,20 +83,20 @@ class AdminProgressCard extends StatelessWidget {
   }
 
   Widget _badge(String label, int pts, Color color) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    decoration: BoxDecoration(
-      color: color.withAlpha((0.12 * 255).round()),
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Row(
-      children: [
-        Text(label),
-        const SizedBox(width: 6),
-        Text(
-          pts.toString(),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withAlpha((0.12 * 255).round()),
+          borderRadius: BorderRadius.circular(8),
         ),
-      ],
-    ),
-  );
+        child: Row(
+          children: [
+            Text(label),
+            const SizedBox(width: 6),
+            Text(
+              pts.toString(),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      );
 }

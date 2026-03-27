@@ -79,11 +79,9 @@ class _ProgressTrackerListState extends State<ProgressTrackerList> {
         runs.add({'datePlayed': firstDate, 'points': pts, 'runID': entry.key});
       }
       runs.sort((a, b) {
-        final da =
-            DateTime.tryParse(a['datePlayed'] ?? '') ??
+        final da = DateTime.tryParse(a['datePlayed'] ?? '') ??
             DateTime.fromMillisecondsSinceEpoch(0);
-        final db =
-            DateTime.tryParse(b['datePlayed'] ?? '') ??
+        final db = DateTime.tryParse(b['datePlayed'] ?? '') ??
             DateTime.fromMillisecondsSinceEpoch(0);
         return db.compareTo(da);
       });

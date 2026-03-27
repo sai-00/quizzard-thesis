@@ -108,10 +108,8 @@ class _QuestionFormState extends State<QuestionForm> {
       counts[t] = (counts[t] ?? 0) + 1;
     }
     final availableOptions = counts.keys.toList();
-    final duplicates = counts.entries
-        .where((e) => e.value > 1)
-        .map((e) => e.key)
-        .toList();
+    final duplicates =
+        counts.entries.where((e) => e.value > 1).map((e) => e.key).toList();
     final hasDuplicates = duplicates.isNotEmpty;
     final currentValue = availableOptions.contains(correctAnswer.trim())
         ? correctAnswer.trim()
@@ -135,13 +133,13 @@ class _QuestionFormState extends State<QuestionForm> {
                 decoration: const InputDecoration(labelText: 'Subject'),
                 items: _subjects.isNotEmpty
                     ? _subjects
-                          .map(
-                            (s) => DropdownMenuItem<int>(
-                              value: s['subjID'] as int,
-                              child: Text(s['subjName'] as String),
-                            ),
-                          )
-                          .toList()
+                        .map(
+                          (s) => DropdownMenuItem<int>(
+                            value: s['subjID'] as int,
+                            child: Text(s['subjName'] as String),
+                          ),
+                        )
+                        .toList()
                     : const [
                         DropdownMenuItem<int>(value: 1, child: Text('Math')),
                         DropdownMenuItem<int>(value: 2, child: Text('Science')),
@@ -219,9 +217,8 @@ class _QuestionFormState extends State<QuestionForm> {
                 onSaved: (v) => correctExplanation = v?.trim(),
               ),
               DropdownButtonFormField<String>(
-                initialValue: difficulty?.isNotEmpty == true
-                    ? difficulty
-                    : null,
+                initialValue:
+                    difficulty?.isNotEmpty == true ? difficulty : null,
                 decoration: const InputDecoration(
                   labelText: 'Select Difficulty',
                 ),

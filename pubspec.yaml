@@ -49,13 +49,25 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: any
+  inno_bundle: ^0.11.2 # Check for latest version
+
+inno_bundle:
+  id: 48D93FF4-8E11-4335-BE9B-ED48CA98E428
+  name: Quizzard
+  executable: quizzard_thesis.exe
+  publisher: sai-00
+  version: 1.0.0
+  privileges_required: none # none, admin, highest
+  languages: 
+  - "english"
+  files:
+    - path: "lib/db/gamedb.db"  
+      destination: "\\"
+      permissions: "users-full"
+  dirs:
+    - name: "{app}"
+      permissions: "users-full"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -79,14 +79,12 @@ class _ResetConfigScreenState extends State<ResetConfigScreen> {
         await txn.execute('PRAGMA foreign_keys = ON;');
       });
 
-      final qCount =
-          Sqflite.firstIntValue(
+      final qCount = Sqflite.firstIntValue(
             await db.rawQuery('SELECT COUNT(*) FROM questionList'),
           ) ??
           0;
 
-      final sCount =
-          Sqflite.firstIntValue(
+      final sCount = Sqflite.firstIntValue(
             await db.rawQuery('SELECT COUNT(*) FROM subject'),
           ) ??
           0;

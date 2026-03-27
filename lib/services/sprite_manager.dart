@@ -46,19 +46,19 @@ class SpriteManager {
   };
 
   SpriteFrame initialFrame() => SpriteFrame(
-    spriteAsset: _spriteFor(SpriteState.neutral),
-    backgroundAsset: _backgroundFor(),
-  );
+        spriteAsset: _spriteFor(SpriteState.neutral),
+        backgroundAsset: _backgroundFor(),
+      );
 
   SpriteFrame correctAnswerFrame() => SpriteFrame(
-    spriteAsset: _spriteFor(SpriteState.correct),
-    backgroundAsset: _backgroundFor(),
-  );
+        spriteAsset: _spriteFor(SpriteState.correct),
+        backgroundAsset: _backgroundFor(),
+      );
 
   SpriteFrame wrongAnswerFrame() => SpriteFrame(
-    spriteAsset: _spriteFor(SpriteState.wrong),
-    backgroundAsset: _backgroundFor(),
-  );
+        spriteAsset: _spriteFor(SpriteState.wrong),
+        backgroundAsset: _backgroundFor(),
+      );
 
   void dispose() => _stopTalking();
 

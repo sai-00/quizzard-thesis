@@ -49,9 +49,8 @@ class _DownloadCsvScreenState extends State<DownloadCsvScreen> {
       final filename = await _askFileName(suggestedName);
       if (!mounted || filename == null || filename.isEmpty) return;
 
-      final name = filename.toLowerCase().endsWith('.csv')
-          ? filename
-          : '$filename.csv';
+      final name =
+          filename.toLowerCase().endsWith('.csv') ? filename : '$filename.csv';
 
       final file = File('$dirPath/$name');
       await file.writeAsBytes(bytes, flush: true);
@@ -139,9 +138,9 @@ class _DownloadCsvScreenState extends State<DownloadCsvScreen> {
             onPressed: _isSaving
                 ? null
                 : () => _downloadCsv(
-                    'templates/csv-question.csv',
-                    'csv-question',
-                  ),
+                      'templates/csv-question.csv',
+                      'csv-question',
+                    ),
             child: const Text('Download'),
           ),
           const SizedBox(height: 24),
@@ -151,9 +150,9 @@ class _DownloadCsvScreenState extends State<DownloadCsvScreen> {
             onPressed: _isSaving
                 ? null
                 : () => _downloadCsv(
-                    'templates/csv-cutscene.csv',
-                    'csv-cutscene',
-                  ),
+                      'templates/csv-cutscene.csv',
+                      'csv-cutscene',
+                    ),
             child: const Text('Download'),
           ),
         ],

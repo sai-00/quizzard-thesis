@@ -14,20 +14,20 @@ class User {
   });
 
   factory User.fromMap(Map<String, dynamic> m) => User(
-    profileID: m['profileID'] as int?,
-    name: m['name'] as String,
-    avatar: m['avatar'] as String?,
-    isAdmin: (m['isAdmin'] is int)
-        ? (m['isAdmin'] as int) == 1
-        : (m['isAdmin'] == true),
-    adminPasscode: m['adminPasscode'] as String?,
-  );
+        profileID: m['profileID'] as int?,
+        name: m['name'] as String,
+        avatar: m['avatar'] as String?,
+        isAdmin: (m['isAdmin'] is int)
+            ? (m['isAdmin'] as int) == 1
+            : (m['isAdmin'] == true),
+        adminPasscode: m['adminPasscode'] as String?,
+      );
 
   Map<String, dynamic> toMap() => {
-    if (profileID != null) 'profileID': profileID,
-    'name': name,
-    'avatar': avatar ?? '',
-    'isAdmin': isAdmin ? 1 : 0,
-    if (adminPasscode != null) 'adminPasscode': adminPasscode,
-  };
+        if (profileID != null) 'profileID': profileID,
+        'name': name,
+        'avatar': avatar ?? '',
+        'isAdmin': isAdmin ? 1 : 0,
+        if (adminPasscode != null) 'adminPasscode': adminPasscode,
+      };
 }

@@ -54,8 +54,7 @@ class _CustomConfigScreenState extends State<CustomConfigScreen> {
     try {
       final db = await QuizzardDb.instance.db;
 
-      final before =
-          Sqflite.firstIntValue(
+      final before = Sqflite.firstIntValue(
             await db.rawQuery('SELECT COUNT(*) FROM questionList'),
           ) ??
           0;
@@ -71,8 +70,7 @@ class _CustomConfigScreenState extends State<CustomConfigScreen> {
         await txn.execute('PRAGMA foreign_keys = ON;');
       });
 
-      final after =
-          Sqflite.firstIntValue(
+      final after = Sqflite.firstIntValue(
             await db.rawQuery('SELECT COUNT(*) FROM questionList'),
           ) ??
           0;
@@ -120,9 +118,8 @@ class _CustomConfigScreenState extends State<CustomConfigScreen> {
     final enabling =
         !_stockDisabled; // if currently disabled, we will enable (i.e., create suppress files)
 
-    final title = enabling
-        ? 'Disable Stock Cutscenes'
-        : 'Enable Stock Cutscenes';
+    final title =
+        enabling ? 'Disable Stock Cutscenes' : 'Enable Stock Cutscenes';
     final content = enabling
         ? 'This will create override files that disable bundled (stock) cutscenes. Continue?'
         : 'This will remove the overrides and restore bundled (stock) cutscenes. Continue?';

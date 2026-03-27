@@ -231,7 +231,6 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
                                   child: CustomPaint(painter: _ShinePainter()),
                                 ),
                               ),
-
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -360,7 +359,6 @@ class _LevelsScreenState extends State<LevelsScreen> with RouteAware {
                                     ),
                                   ),
                                 ),
-
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,

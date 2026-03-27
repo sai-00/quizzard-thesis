@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:io' show File, Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 class QuizzardDb {
@@ -21,20 +22,26 @@ class QuizzardDb {
       throw UnsupportedError('sqflite is not supported on the web');
     }
 
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (Platform.isWindows) {
       try {
-        final exeDir = File(Platform.resolvedExecutable).parent.path;
-        final candidate = p.join(exeDir, 'gamedb.db');
-        final file = File(candidate);
-        if (await file.exists()) return candidate;
+        final appSupportDir = await getApplicationSupportDirectory();
+        final dbPath = p.join(appSupportDir.path, 'gamedb.db');
+        final dbFile = File(dbPath);
 
-        // Try creating the file to verify writability. If creation fails,
-        // we'll fall back to the default databases path.
-        await file.create(recursive: true);
-        // leave the file empty; onCreate will populate the schema
-        return candidate;
-      } catch (_) {
-        // ignore and fallback
+        if (!await dbFile.exists()) {
+          final exeDir = File(Platform.resolvedExecutable).parent.path;
+          final bundledDbPath = p.join(exeDir, 'gamedb.db');
+          final bundledDbFile = File(bundledDbPath);
+
+          if (await bundledDbFile.exists()) {
+            await appSupportDir.create(recursive: true);
+            await bundledDbFile.copy(dbPath);
+          }
+        }
+        return dbPath;
+      } catch (e) {
+        debugPrint("Windows DB resolve error: $e");
+        // Fallback to default if something goes wrong
       }
     }
 

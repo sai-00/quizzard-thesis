@@ -102,8 +102,7 @@ class _GameViewState extends State<GameView> {
   }
 
   bool _csvHasLines(ScenePlacement placement) {
-    final has =
-        (placement == ScenePlacement.beginning
+    final has = (placement == ScenePlacement.beginning
                 ? _sceneKeyBeginning.currentState
                 : _sceneKeyEnd.currentState)
             ?.hasLines ??
@@ -233,77 +232,78 @@ class _GameViewState extends State<GameView> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: Stack(
-      children: [
-        _buildPhase(),
-        // Top menu: left = pause/menu, right = skip cutscene
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.white),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => const GameMenu(),
-                      );
-                    },
-                  ),
-                ),
-
-                // Skip cutscene button
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: IconButton(
-                    // Display >> as requested
-                    icon: const Text(
-                      '>>',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+        body: Stack(
+          children: [
+            _buildPhase(),
+            // Top menu: left = pause/menu, right = skip cutscene
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.menu, color: Colors.white),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => const GameMenu(),
+                          );
+                        },
                       ),
                     ),
-                    onPressed: () {
-                      // If we're in the intro cutscene, skip into gameplay
-                      if (controller.phase == GamePhase.cutsceneStart) {
-                        setState(() {
-                          _csvBeginningFinished = true;
-                        });
-                        controller.finishCutscene();
-                      } else if (controller.phase == GamePhase.cutsceneEnd ||
-                          controller.phase == GamePhase.completed) {
-                        // Hide CSV end overlay if visible
-                        setState(() {
-                          _showingCsvEnd = false;
-                          _csvEndRequested = false;
-                        });
-                      }
-                    },
-                  ),
+
+                    // Skip cutscene button
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        // Display >> as requested
+                        icon: const Text(
+                          '>>',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onPressed: () {
+                          // If we're in the intro cutscene, skip into gameplay
+                          if (controller.phase == GamePhase.cutsceneStart) {
+                            setState(() {
+                              _csvBeginningFinished = true;
+                            });
+                            controller.finishCutscene();
+                          } else if (controller.phase ==
+                                  GamePhase.cutsceneEnd ||
+                              controller.phase == GamePhase.completed) {
+                            // Hide CSV end overlay if visible
+                            setState(() {
+                              _showingCsvEnd = false;
+                              _csvEndRequested = false;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 
   Widget _csvCutscene(ScenePlacement placement) {
     // Choose onFinished/onNoLines handlers depending on placement so we can
@@ -785,7 +785,7 @@ class _GameViewState extends State<GameView> {
                     child: LinearProgressIndicator(
                       value: controller.totalQuestions > 0
                           ? (controller.answeredCount /
-                                controller.totalQuestions)
+                              controller.totalQuestions)
                           : 0,
                       minHeight: 6,
                       backgroundColor: Colors.white24,
@@ -890,25 +890,24 @@ class _GameViewState extends State<GameView> {
                           style: ButtonStyle(
                             backgroundColor:
                                 MaterialStateProperty.resolveWith<Color>((
-                                  states,
-                                ) {
-                                  if (states.contains(MaterialState.disabled)) {
-                                    return baseColor.withOpacity(0.5);
-                                  }
-                                  if (states.contains(MaterialState.pressed)) {
-                                    return HSLColor.fromColor(
-                                      baseColor,
-                                    ).withLightness(0.45).toColor();
-                                  }
-                                  return baseColor;
-                                }),
+                              states,
+                            ) {
+                              if (states.contains(MaterialState.disabled)) {
+                                return baseColor.withOpacity(0.5);
+                              }
+                              if (states.contains(MaterialState.pressed)) {
+                                return HSLColor.fromColor(
+                                  baseColor,
+                                ).withLightness(0.45).toColor();
+                              }
+                              return baseColor;
+                            }),
                             elevation:
                                 MaterialStateProperty.resolveWith<double>(
-                                  (states) =>
-                                      states.contains(MaterialState.pressed)
-                                      ? 2
-                                      : 4,
-                                ),
+                              (states) => states.contains(MaterialState.pressed)
+                                  ? 2
+                                  : 4,
+                            ),
                             shape: MaterialStateProperty.all(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),

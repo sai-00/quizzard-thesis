@@ -148,9 +148,8 @@ class _ArchiveDataScreenState extends State<ArchiveDataScreen> {
       final filename = await _askFileName(suggestedName);
       if (!mounted || filename == null || filename.isEmpty) return;
 
-      final name = filename.toLowerCase().endsWith('.csv')
-          ? filename
-          : '$filename.csv';
+      final name =
+          filename.toLowerCase().endsWith('.csv') ? filename : '$filename.csv';
       final file = File('$dirPath/$name');
       final csv = rows.join('\n');
       await file.writeAsString(csv, flush: true, encoding: utf8);

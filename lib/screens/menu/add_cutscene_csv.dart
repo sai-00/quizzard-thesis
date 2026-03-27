@@ -108,9 +108,8 @@ class _AddCutsceneCsvScreenState extends State<AddCutsceneCsvScreen> {
           ),
           const SizedBox(height: 8),
           ElevatedButton(
-            onPressed: _isUploading
-                ? null
-                : () => _uploadFor(_selectedSubject!, diff),
+            onPressed:
+                _isUploading ? null : () => _uploadFor(_selectedSubject!, diff),
             child: const Text('Upload'),
           ),
           const SizedBox(height: 24),
